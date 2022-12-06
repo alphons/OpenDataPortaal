@@ -42,13 +42,13 @@ public async Task<IActionResult> Fracties()
         { $skip: 0 },
         { $limit: 50 }
     ]";
-		var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
+	var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
 
-		return Ok(new
-		{
-			List
-		});
-	}
+	return Ok(new
+	{
+		List
+	});
+}
 ```
 Output (eerste 5):
 
