@@ -1,6 +1,7 @@
 //
 // (c) 2022, Alphons van der Heijden
 // alphons@heijden.com
+// Versie: 1.1
 //
 // https://opendata.tweedekamer.nl/documentatie/
 //
@@ -89,7 +90,7 @@ public partial class persoonType : downloadEntiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> geboortedatum { get; set; }
+	public DateTime? geboortedatum { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string geboorteplaats { get; set; }
@@ -98,7 +99,7 @@ public partial class persoonType : downloadEntiteitType
 	public string geboorteland { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> overlijdensdatum { get; set; }
+	public DateTime? overlijdensdatum { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string overlijdensplaats { get; set; }
@@ -141,6 +142,7 @@ public partial class referentieLiteral
 	public object[] annotatie { get; set; }
 
 	[XmlAttribute("ref")]
+	[JsonPropertyName("ref")]
 	public Guid @ref { get; set; }
 }
 
@@ -277,6 +279,7 @@ public abstract partial class downloadEntiteitType : entiteitType
 	public int contentLength { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool contentLengthSpecified { get; set; }
 
 }
@@ -297,7 +300,7 @@ public partial class persoonContactinformatieType : entiteitType
 	public string waarde { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 [Serializable()]
@@ -313,10 +316,10 @@ public partial class persoonGeschenkType : entiteitType
 	public string omschrijving { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datum { get; set; }
+	public DateTime? datum { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 
 }
 
@@ -351,7 +354,7 @@ public partial class persoonLoopbaanType : entiteitType
 	public string totEnMet { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 [Serializable()]
@@ -368,7 +371,7 @@ public partial class persoonNevenfunctieType : entiteitType
 	public string omschrijving { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<bool> isActief { get; set; }
+	public bool? isActief { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public persoonNevenfunctieTypePeriode periode { get; set; }
@@ -377,7 +380,7 @@ public partial class persoonNevenfunctieType : entiteitType
 	public persoonNevenfunctieTypeVergoeding vergoeding { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 
 }
 
@@ -430,9 +433,10 @@ public partial class persoonNevenfunctieInkomstenType : entiteitType
 	public string bedragValuta { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<decimal> bedrag { get; set; }
+	public decimal? bedrag { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool bedragSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -476,7 +480,7 @@ public partial class persoonOnderwijsType : entiteitType
 	public string totEnMet { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 [Serializable()]
@@ -505,7 +509,7 @@ public partial class persoonReisType : entiteitType
 	public string betaaldDoor { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 
@@ -541,10 +545,10 @@ public partial class commissieType : entiteitType
 	public string inhoudsopgave { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumActief { get; set; }
+	public DateTime? datumActief { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumInactief { get; set; }
+	public DateTime? datumInactief { get; set; }
 }
 
 
@@ -565,7 +569,7 @@ public partial class commissieContactinformatieType : entiteitType
 	public string waarde { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 
@@ -576,11 +580,10 @@ public partial class commissieContactinformatieType : entiteitType
 [XmlRoot("commissieZetel", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class commissieZetelType : entiteitType
 {
-
 	public referentieLiteral commissie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 
@@ -591,7 +594,6 @@ public partial class commissieZetelType : entiteitType
 [XmlRoot("commissieZetelVastPersoon", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class commissieZetelVastPersoonType : entiteitType
 {
-
 	public referentieLiteral commissieZetel { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -601,10 +603,10 @@ public partial class commissieZetelVastPersoonType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -615,7 +617,6 @@ public partial class commissieZetelVastPersoonType : entiteitType
 [XmlRoot("commissieZetelVastVacature", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class commissieZetelVastVacatureType : entiteitType
 {
-
 	public referentieLiteral commissieZetel { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -625,10 +626,10 @@ public partial class commissieZetelVastVacatureType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -639,7 +640,6 @@ public partial class commissieZetelVastVacatureType : entiteitType
 [XmlRoot("commissieZetelVervangerPersoon", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class commissieZetelVervangerPersoonType : entiteitType
 {
-
 	public referentieLiteral commissieZetel { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -649,10 +649,10 @@ public partial class commissieZetelVervangerPersoonType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -663,7 +663,6 @@ public partial class commissieZetelVervangerPersoonType : entiteitType
 [XmlRoot("commissieZetelVervangerVacature", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class commissieZetelVervangerVacatureType : entiteitType
 {
-
 	public referentieLiteral commissieZetel { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -673,10 +672,10 @@ public partial class commissieZetelVervangerVacatureType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -687,7 +686,6 @@ public partial class commissieZetelVervangerVacatureType : entiteitType
 [XmlRoot("fractie", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class fractieType : downloadEntiteitType
 {
-
 	public string nummer { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -700,16 +698,16 @@ public partial class fractieType : downloadEntiteitType
 	public string naamEn { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> aantalZetels { get; set; }
+	public uint? aantalZetels { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> aantalStemmen { get; set; }
+	public uint? aantalStemmen { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumActief { get; set; }
+	public DateTime? datumActief { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumInactief { get; set; }
+	public DateTime? datumInactief { get; set; }
 }
 
 
@@ -720,7 +718,6 @@ public partial class fractieType : downloadEntiteitType
 [XmlRoot("fractieAanvullendGegeven", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class fractieAanvullendGegevenType : entiteitType
 {
-
 	public referentieLiteral fractie { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -730,7 +727,7 @@ public partial class fractieAanvullendGegevenType : entiteitType
 	public string waarde { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 
@@ -741,11 +738,10 @@ public partial class fractieAanvullendGegevenType : entiteitType
 [XmlRoot("fractieZetel", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class fractieZetelType : entiteitType
 {
-
 	public referentieLiteral fractie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> gewicht { get; set; }
+	public int? gewicht { get; set; }
 }
 
 
@@ -756,7 +752,6 @@ public partial class fractieZetelType : entiteitType
 [XmlRoot("fractieZetelPersoon", Namespace = "http://www.tweedekamer.nl/xsd/tkData/v1-0", IsNullable = false)]
 public partial class fractieZetelPersoonType : entiteitType
 {
-
 	public referentieLiteral fractieZetel { get; set; }
 
 	public referentieLiteral persoon { get; set; }
@@ -765,10 +760,10 @@ public partial class fractieZetelPersoonType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -786,10 +781,10 @@ public partial class fractieZetelVacatureType : entiteitType
 	public string functie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> van { get; set; }
+	public DateTime? van { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> totEnMet { get; set; }
+	public DateTime? totEnMet { get; set; }
 }
 
 
@@ -814,21 +809,24 @@ public partial class activiteitType : entiteitType
 	public string datumSoort { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datum { get; set; }
+	public DateTime? datum { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> aanvangstijd { get; set; }
+	public DateTime? aanvangstijd { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool aanvangstijdSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> eindtijd { get; set; }
+	public DateTime? eindtijd { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool eindtijdSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -864,39 +862,45 @@ public partial class activiteitType : entiteitType
 	public referentieLiteral voortouwcommissie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> aanvraagdatum { get; set; }
+	public DateTime? aanvraagdatum { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool aanvraagdatumSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumVerzoekEersteVerlenging { get; set; }
+	public DateTime? datumVerzoekEersteVerlenging { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumVerzoekEersteVerlengingSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumMededelingEersteVerlenging { get; set; }
+	public DateTime? datumMededelingEersteVerlenging { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumMededelingEersteVerlengingSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumVerzoekTweedeVerlenging { get; set; }
+	public DateTime? datumVerzoekTweedeVerlenging { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumVerzoekTweedeVerlengingSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumMededelingTweedeVerlenging { get; set; }
+	public DateTime? datumMededelingTweedeVerlenging { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumMededelingTweedeVerlengingSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> vervaldatum { get; set; }
+	public DateTime? vervaldatum { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool vervaldatumSpecified { get; set; }
 
 	public referentieLiteral voortgezetVanuit { get; set; }
@@ -924,9 +928,10 @@ public partial class activiteitActorType : entiteitType
 	public string relatie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> volgorde { get; set; }
+	public uint? volgorde { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool volgordeSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -962,13 +967,13 @@ public partial class agendapuntType : entiteitType
 	public string onderwerp { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> aanvangstijd { get; set; }
+	public DateTime? aanvangstijd { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> eindtijd { get; set; }
+	public DateTime? eindtijd { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> volgorde { get; set; }
+	public uint? volgorde { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string rubriek { get; set; }
@@ -1007,7 +1012,7 @@ public partial class besluitType : entiteitType
 	public string status { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> agendapuntZaakBesluitVolgorde { get; set; }
+	public int? agendapuntZaakBesluitVolgorde { get; set; }
 
 	[XmlElement("zaak")]
 	public referentieLiteral[] zaak { get; set; }
@@ -1028,7 +1033,7 @@ public partial class stemmingType : entiteitType
 	public string soort { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> fractieGrootte { get; set; }
+	public uint? fractieGrootte { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string actorNaam { get; set; }
@@ -1037,7 +1042,7 @@ public partial class stemmingType : entiteitType
 	public string actorFractie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<bool> vergissing { get; set; }
+	public bool? vergissing { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string sidActorLid { get; set; }
@@ -1072,7 +1077,8 @@ public partial class documentType : downloadEntiteitType
 
 	public DateTime datum { get; set; }
 
-	[XmlIgnore()] // Is this correct????
+	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumSpecified { get; set; }
 
 	public int volgnummer { get; set; }
@@ -1088,15 +1094,17 @@ public partial class documentType : downloadEntiteitType
 	public string alias { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumRegistratie { get; set; }
+	public DateTime? datumRegistratie { get; set; }
 
-	[XmlIgnore()] // Is this correct?
+	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumRegistratieSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datumOntvangst { get; set; }
+	public DateTime? datumOntvangst { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumOntvangstSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -1173,16 +1181,16 @@ public partial class documentVersieType : entiteitType
 	public string status { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> versienummer { get; set; }
+	public uint? versienummer { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> bestandsgrootte { get; set; }
+	public uint? bestandsgrootte { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string extensie { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datum { get; set; }
+	public DateTime? datum { get; set; }
 }
 
 
@@ -1206,6 +1214,7 @@ public partial class kamerstukdossierType : entiteitType
 	public uint nummer { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool nummerSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -1214,10 +1223,11 @@ public partial class kamerstukdossierType : entiteitType
 	public int hoogsteVolgnummer { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool hoogsteVolgnummerSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<bool> afgesloten { get; set; }
+	public bool? afgesloten { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string kamer { get; set; }
@@ -1235,7 +1245,7 @@ public partial class zaalType : entiteitType
 	public string naam { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> sysCode { get; set; }
+	public int? sysCode { get; set; }
 }
 
 
@@ -1286,27 +1296,31 @@ public partial class vergaderingType : entiteitType
 	public string vergaderjaar { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<uint> vergaderingNummer { get; set; }
+	public uint? vergaderingNummer { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool vergaderingNummerSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> datum { get; set; }
+	public DateTime? datum { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool datumSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> aanvangstijd { get; set; }
+	public DateTime? aanvangstijd { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool aanvangstijdSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> sluiting { get; set; }
+	public DateTime? sluiting { get; set; }
 
 	[XmlIgnore()]
+	[JsonIgnore]
 	public bool sluitingSpecified { get; set; }
 
 	[XmlElement(IsNullable = true)]
@@ -1361,11 +1375,11 @@ public partial class zaakType : entiteitType
 	public string grondslagvoorhang { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<DateTime> termijn { get; set; }
+	public DateTime? termijn { get; set; }
 	public string vergaderjaar { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<int> volgnummer { get; set; }
+	public int? volgnummer { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string status { get; set; }
@@ -1374,10 +1388,10 @@ public partial class zaakType : entiteitType
 	public string huidigeBehandelstatus { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<bool> afgedaan { get; set; }
+	public bool? afgedaan { get; set; }
 
 	[XmlElement(IsNullable = true)]
-	public Nullable<bool> grootProject { get; set; }
+	public bool? grootProject { get; set; }
 
 	[XmlElement(IsNullable = true)]
 	public string kabinetsappreciatie { get; set; }
@@ -1452,6 +1466,7 @@ public partial class identiteitType
 
 	[XmlElement("ItemsElementName")]
 	[XmlIgnore()]
+	[JsonIgnore]
 	public ItemsChoiceType[] ItemsElementName { get; set; }
 
 	[XmlAttribute()]
@@ -1467,4 +1482,3 @@ public enum ItemsChoiceType
 }
 
 #pragma warning restore IDE1006
-
