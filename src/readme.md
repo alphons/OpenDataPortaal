@@ -16,7 +16,7 @@ Na het importeren zijn dit de collecties binnen MongoDB
 
 ![MongDB Collections](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer3.png)
 
-Voorbeeld van een mongodb query:
+Voorbeeld (C#) van een mongodb query in een api method:
 
 ```c#
 [HttpPost]
@@ -37,7 +37,7 @@ public async Task<IActionResult> Fracties()
       }
     },
     {
-	  $sort: { 'zetels' : -1, stemmen:-1  }
+      $sort: { 'zetels' : -1, stemmen:-1  }
     },
     { $skip: 0 },
     { $limit: 50 }
@@ -88,7 +88,7 @@ Output (eerste 5):
 
 ```
 
-Als proof-of-concept is een windows en een webinterface beschikbaar waarbij beschikbare data kan worden opgevraagd.
+Als proof-of-concept is een webinterface beschikbaar waarbij beschikbare data kan worden opgevraagd.
 
 Voorbeeld fractieType:
 
