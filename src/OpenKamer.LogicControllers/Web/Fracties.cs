@@ -24,6 +24,9 @@ public partial class WebController : ControllerBase
 		stemmen: '$aantalStemmen',
   }
 },
+{
+	$sort: { 'zetels' : -1, stemmen:-1  }
+},
 { $skip: 0 },
 { $limit: 50 }
 ]";

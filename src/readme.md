@@ -6,17 +6,86 @@ De XSD beschrijving is omgezet in C# classes, deze zijn te vinden onder OpenKame
 
 Een FeedController zorgt voor het overhalen van de data files volgens https://gegevensmagazijn.tweedekamer.nl/SyncFeed/2.0/ om deze vervolgens lokaal op te slaan (cache) op een filesysteem.
                         
-![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer1.png)
+![FeedController](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer1.png)
 
 Een EntityController leest de datafiles en slaat de Entiteiten op in een mongodb server.
 
-![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer2.png)
+![EntityController](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer2.png)
 
 Na het importeren zijn dit de collecties binnen MongoDB
 
-![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer3.png)
+![MongDB Collections](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer3.png)
 
+Voorbeeld van een mongodb query:
+
+```json
+[
+	{ 
+		$match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } 
+	},
+	{
+		$project:
+  		{
+			_id: 0,
+			afkorting:1,
+			naam: '$naamNl',
+			zetels: '$aantalZetels',
+			stemmen: '$aantalStemmen',
+	  }
+	},
+	{
+		$sort: { 'zetels' : -1, stemmen:-1  }
+	},
+	{ 
+		$skip: 0 
+	},
+	{ 
+		$limit: 20 
+	}
+]
+```
+Output (eerste 5):
+
+```json
+[
+  {
+    "afkorting": "VVD",
+    "naam": "Volkspartij voor Vrijheid en Democratie",
+    "zetels": 34,
+    "stemmen": 2279130
+  },
+  {
+    "afkorting": "D66",
+    "naam": "Democraten 66",
+    "zetels": 24,
+    "stemmen": 1565861
+  },
+  {
+    "afkorting": "PVV",
+    "naam": "Partij voor de Vrijheid",
+    "zetels": 17,
+    "stemmen": 1124482
+  },
+  {
+    "afkorting": "CDA",
+    "naam": "Christen-Democratisch Appèl",
+    "zetels": 14,
+    "stemmen": 990601
+  },
+  {
+    "afkorting": "SP",
+    "naam": "Socialistische Partij",
+    "zetels": 9,
+    "stemmen": 623371
+  }
+]
+
+```
 
 Als proof-of-concept is een windows en een webinterface beschikbaar waarbij beschikbare data kan worden opgevraagd.
+
+Voorbeeld fractieType:
+
+![Fracties](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer4.png)
 
 
