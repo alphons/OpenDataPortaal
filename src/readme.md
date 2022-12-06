@@ -25,22 +25,22 @@ public async Task<IActionResult> Fracties()
 {
   var query = @"
   [
-    { $match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } },
+    { $match: { verwijderd: false, aantalZetels : { $gt : 0 } } },
     { 
       $project:
       {
         _id: 0,
-        afko: '$afkorting',
+        afkorting : 1,
         naam: '$naamNl',
         zetels: '$aantalZetels',
         stemmen: '$aantalStemmen',
       }
     },
     {
-      $sort: { 'zetels' : -1, stemmen:-1  }
+      $sort: { aantalZetels : -1, aantalStemmen:-1  }
     },
     { $skip: 0 },
-    { $limit: 50 }
+    { $limit: 25 }
   ]";
 
   var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
