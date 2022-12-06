@@ -1,0 +1,374 @@
+﻿[
+	{
+		$match: { 'functie.Value' : 'Tweede Kamerlid', 'verwijderd': false } 
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'fractieZetelPersoonType',
+			foreignField: 'persoon.ref',
+			as: 'zetelhistory',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$lookup:
+					{
+						localField: 'fractieZetel.ref',
+						from: 'fractieZetelType',
+						foreignField: '_id',
+						as: 'fractiezetel',
+						pipeline:
+						[
+							{ $match: { 'verwijderd': false } },
+							{
+								$lookup:
+								{
+									localField: 'fractie.ref',
+									from: 'fractieType',
+									foreignField: '_id',
+									as: 'fractie'
+								}
+							},	
+							{
+								$project:
+								{
+									_id:1,
+									fractie:1,
+									gewicht: '$gewicht.Value'
+								}
+							},
+							{
+								$unwind: '$fractie'
+							}
+
+						]
+					}
+					
+				},
+				{
+					$sort:
+					{
+						'van.Value' : -1
+					}
+
+				},
+				{
+					$unwind: '$fractiezetel'
+				},
+				{
+					$project:
+					{
+						_id:0,
+						functie:'$functie.Value',
+						tot: { $substr: [ '$totEnMet.Value', 0, 10 ] },
+						van: { $substr: [ '$van.Value', 0, 10 ] }
+
+						afko: '$fractiezetel.fractie.afkorting.Value',
+						naamNL: '$fractiezetel.fractie.naamNl.Value',
+						naamEN: '$fractiezetel.fractie.naamEn.Value',
+						zetels: '$fractiezetel.fractie.aantalZetels.Value',
+						stemmen: '$fractiezetel.fractie.aantalStemmen.Value'
+					}
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonOnderwijsType',
+			foreignField: 'persoon.ref',
+			as: 'onderwijs',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$project:
+					{
+						_id:0,
+						opleidingNL:'$opleidingNl.Value',
+						opleidingEN:'$opleidingEn.Value',
+						instelling:'$instelling.Value',
+						plaats: '$plaats.Value',
+						van: '$van.Value'
+						tot: '$totEnMet.Value'
+					}
+				},
+				{
+					$sort: { 'gewicht.Value' : 1 }
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonReisType',
+			foreignField: 'persoon.ref',
+			as: 'reis',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$project:
+					{
+						_id:0,
+						doel:'$doel.Value',
+						bestemming:'$bestemming.Value',
+						van: '$van.Value'
+						tot: '$totEnMet.Value'
+						pay: '$betaaldDoor.Value'
+					}
+				},
+				{
+					$sort: { 'gewicht.Value' : 1 }
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonLoopbaanType',
+			foreignField: 'persoon.ref',
+			as: 'loopbaan',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$project:
+					{
+						_id:0,
+						functie:'$functie.Value',
+						werkgever:'$werkgever.Value',
+						omschrijvingNL:'$omschrijvingNl.Value',
+						omschrijvingEN:'$omschrijvingEn.Value',
+						plaats: '$plaats.Value',
+						van: '$van.Value'
+						tot: '$totEnMet.Value'
+					}
+				},
+				{
+					$sort: { 'gewicht.Value' : 1 }
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonGeschenkType',
+			foreignField: 'persoon.ref',
+			as: 'geschenk',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$project:
+					{
+						_id:0,
+						omschrijving:'$omschrijving.Value',
+						datums: { $substr: [ '$datum.Value', 0, 10 ] }
+					}
+				},
+				{
+					$sort: { 'gewicht.Value' : 1 }
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonContactinformatieType',
+			foreignField: 'persoon.ref',
+			as: 'contact',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$project:
+					{
+						_id:0,
+						type:'$soort.Value',
+						val:'$waarde.Value'
+					}
+				}
+			]
+		}
+	},
+	{
+		$lookup:
+		{
+			localField: '_id',
+			from: 'persoonNevenfunctieType',
+			foreignField: 'persoon.ref',
+			as: 'nevenfuncties',
+			pipeline:
+			[
+				{ $match: { 'verwijderd': false } },
+				{
+					$lookup:
+					{
+						localField: '_id',
+						from: 'persoonNevenfunctieInkomstenType',
+						foreignField: 'persoonNevenfunctie.ref',
+						as: 'inkomsten',
+						pipeline:
+						[
+							{
+								$project:
+								{
+									_id:0,
+									jaar: '$jaar.Value',
+									bedrag: { $ifNull: ['$bedrag', "?" ] },
+								}
+							},
+							{
+								$sort: { jaar: 1 }
+							}
+						]
+					}
+				},
+				{
+					$project:
+					{
+						_id:0,
+						omschrijving:'$omschrijving.Value',
+						soort: '$vergoeding.soort.Value',
+						inkomsten:1
+					}
+				},
+				{
+					$set:
+					{
+						'inkomsten':
+						{
+							$cond:
+							[
+								{ 
+									$eq: [ { $size: '$inkomsten' }, 0 ]
+								},
+								'$$REMOVE',
+								'$inkomsten'
+							]
+						}
+					}
+				}
+			]
+		}
+	},
+	{
+		$project:
+		{
+			_id:0,
+			roepnaam : '$roepnaam.Value',
+			tussenvoegsel: { $ifNull: ['$tussenvoegsel.Value', "" ] },
+			achternaam: '$achternaam.Value',
+			zetelhistory: 1,
+			nevenfuncties:1,
+			contact:1,
+			geschenk:1,
+			loopbaan:1,
+			onderwijs:1,
+			reis:1
+		}
+	},
+	{
+		$set:
+		{
+			'nevenfuncties':
+			{
+				$cond:
+				[
+					{ 
+						$eq: [ { $size: '$nevenfuncties' }, 0 ]
+					},
+					'$$REMOVE',
+					'$nevenfuncties'
+				]
+			}
+		}
+	},
+	{
+		$set:
+		{
+			'geschenk':
+			{
+				$cond:
+				[
+					{ 
+						$eq: [ { $size: '$geschenk' }, 0 ]
+					},
+					'$$REMOVE',
+					'$geschenk'
+				]
+			}
+		}
+	},
+	{
+		$set:
+		{
+			'loopbaan':
+			{
+				$cond:
+				[
+					{ 
+						$eq: [ { $size: '$loopbaan' }, 0 ]
+					},
+					'$$REMOVE',
+					'$loopbaan'
+				]
+			}
+		}
+	},
+	{
+		$set:
+		{
+			'onderwijs':
+			{
+				$cond:
+				[
+					{ 
+						$eq: [ { $size: '$onderwijs' }, 0 ]
+					},
+					'$$REMOVE',
+					'$onderwijs'
+				]
+			}
+		}
+	},
+	{
+		$set:
+		{
+			'reis':
+			{
+				$cond:
+				[
+					{ 
+						$eq: [ { $size: '$reis' }, 0 ]
+					},
+					'$$REMOVE',
+					'$reis'
+				]
+			}
+		}
+	},
+	{
+		$sort:
+		{
+			achternaam: 1
+		}
+	},
+	{
+		$skip: 2 },
+	{
+		$limit: 1 }
+]
