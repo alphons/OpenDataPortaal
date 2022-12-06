@@ -23,31 +23,31 @@ Voorbeeld van een mongodb query:
 [Route("~/api/Fracties")]
 public async Task<IActionResult> Fracties()
 {
-	var query = @"
-    [
-        { $match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } },
-        { 
-            $project:
-            {
-		        _id: 0,
-		        afko: '$afkorting',
-		        naam: '$naamNl',
-		        zetels: '$aantalZetels',
-		        stemmen: '$aantalStemmen',
-            }
-        },
-        {
-	        $sort: { 'zetels' : -1, stemmen:-1  }
-        },
-        { $skip: 0 },
-        { $limit: 50 }
-    ]";
-	var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
+  var query = @"
+  [
+    { $match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } },
+    { 
+      $project:
+      {
+        _id: 0,
+        afko: '$afkorting',
+        naam: '$naamNl',
+        zetels: '$aantalZetels',
+        stemmen: '$aantalStemmen',
+      }
+    },
+    {
+	  $sort: { 'zetels' : -1, stemmen:-1  }
+    },
+    { $skip: 0 },
+    { $limit: 50 }
+  ]";
 
-	return Ok(new
-	{
-		List
-	});
+  var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
+  return Ok(new
+  {
+    List
+  });
 }
 ```
 Output (eerste 5):
