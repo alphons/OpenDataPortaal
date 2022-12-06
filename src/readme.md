@@ -18,31 +18,37 @@ Na het importeren zijn dit de collecties binnen MongoDB
 
 Voorbeeld van een mongodb query:
 
-```json
-[
-	{ 
-		$match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } 
-	},
-	{
-		$project:
-  		{
-			_id: 0,
-			afkorting:1,
-			naam: '$naamNl',
-			zetels: '$aantalZetels',
-			stemmen: '$aantalStemmen',
-	  }
-	},
-	{
-		$sort: { 'zetels' : -1, stemmen:-1  }
-	},
-	{ 
-		$skip: 0 
-	},
-	{ 
-		$limit: 20 
+```c#
+[HttpPost]
+[Route("~/api/Fracties")]
+public async Task<IActionResult> Fracties()
+{
+	var query = @"
+    [
+        { $match: { verwijderd: false, 'aantalZetels' : { $gt : 0 } } },
+        { 
+            $project:
+            {
+		        _id: 0,
+		        afko: '$afkorting',
+		        naam: '$naamNl',
+		        zetels: '$aantalZetels',
+		        stemmen: '$aantalStemmen',
+            }
+        },
+        {
+	        $sort: { 'zetels' : -1, stemmen:-1  }
+        },
+        { $skip: 0 },
+        { $limit: 50 }
+    ]";
+		var List = await db.GetCollection("fractieType").Aggregate(query).ToListAsync();
+
+		return Ok(new
+		{
+			List
+		});
 	}
-]
 ```
 Output (eerste 5):
 
