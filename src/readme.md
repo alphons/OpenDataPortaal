@@ -6,11 +6,12 @@ De XSD beschrijving is omgezet in C# classes, deze zijn te vinden onder OpenKame
 
 Een FeedController zorgt voor het overhalen van de data files volgens https://gegevensmagazijn.tweedekamer.nl/SyncFeed/2.0/ om deze vervolgens lokaal op te slaan (cache) op een filesysteem.
 
-![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/main/blob/OpenKamer1.png)
+                        
+![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer1.png)
 
 Een EntityController leest de datafiles en slaat de Entiteiten op in een mongodb server.
 
-![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/main/blob/OpenKamer2.png)
+![pretty print colored](https://raw.githubusercontent.com/alphons/OpenDataPortaal/master/blob/OpenKamer2.png)
 
 Als proof-of-concept is een windows en een webinterface beschikbaar waarbij beschikbare data kan worden opgevraagd.
 
