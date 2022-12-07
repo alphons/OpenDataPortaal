@@ -26,7 +26,7 @@ var mongoSection = builder.Configuration.GetSection("Mongo");
 
 var mongoclient = new MongoClient(mongoSection["ConnectionString"]);
 
-//builder.Services.AddSingleton<IMongoClient>(mongoclient);
+builder.Services.AddSingleton<IMongoClient>(mongoclient);
 
 var db = mongoclient.GetDatabase(mongoSection["DbName"]);
 
