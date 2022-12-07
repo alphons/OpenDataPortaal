@@ -4,6 +4,7 @@ const Entities = $id("Entities");
 const Output = $id("Output");
 const TemplateList = $id("TemplateList");
 const TemplateObjectProperties = $id("TemplateObjectProperties");
+const TemplateMoties = $id("TemplateMoties");
 
 (function ()
 {

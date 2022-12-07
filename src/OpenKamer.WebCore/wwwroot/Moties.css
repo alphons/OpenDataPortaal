@@ -1,0 +1,115 @@
+html
+{
+	box-sizing: border-box;
+}
+
+*, *:before, *:after
+{
+	box-sizing: inherit;
+}
+
+body
+{
+	line-height: 1;
+	font-family: Arial;
+	padding: 10px;
+	overflow-x: auto;
+}
+
+a
+{
+	text-decoration: none;
+	color: dimgrey;
+}
+
+	a:hover
+	{
+		color: #444;
+	}
+
+#NetProxySpinner
+{
+	display: none;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-top: -25px;
+	margin-left: -25px;
+	z-index: 1;
+}
+
+
+.stopfloating
+{
+	clear: both;
+}
+
+
+.Flexing
+{
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.TableNormal
+{
+	border-collapse: separate;
+	border-spacing: 0;
+	border: 1px solid #ddd;
+	border-radius: 10px;
+	padding: 4px;
+	min-width: 600px;
+}
+
+	.TableNormal td, .TableNormal th
+	{
+		border: 1px solid #ddd;
+		apadding: 8px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		height: 26px;
+	}
+
+	.TableNormal th
+	{
+		padding-top: 12px;
+		padding-bottom: 12px;
+		text-align: left;
+		background-color: #4CAF50;
+		color: white;
+	}
+
+	.TaableNormal tr:hover
+	{
+		background-color: #c0c0ff;
+		cursor: pointer;
+	}
+
+
+
+.l
+{
+	float: left;
+}
+
+.r
+{
+	float: right;
+}
+
+.tt
+{
+	vertical-align: top;
+	width: 400px
+}
+
+	.tt div:nth-child(odd)
+	{
+		background-color: #f2f2f2;
+	}
+
+	.tt div
+	{
+		padding:5px;
+	}

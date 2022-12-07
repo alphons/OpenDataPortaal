@@ -14,7 +14,7 @@ public partial class WebController : ControllerBase
 		await HttpContext.Session.CommitAsync();
 
 
-		var Version = $"MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version})";
+		var Version = $"MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version}";
 
 		return Ok(new
 		{

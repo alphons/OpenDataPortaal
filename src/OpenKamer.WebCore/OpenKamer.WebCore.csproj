@@ -16,4 +16,11 @@
     <ProjectReference Include="..\OpenKamer.LogicControllers\OpenKamer.LogicControllers.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\Moties.htm">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
