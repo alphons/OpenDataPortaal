@@ -9,7 +9,7 @@ public partial class WebController : ControllerBase
 {
 	[HttpPost]
 	[Route("~/api/Moties")]
-	public async Task<IActionResult> Moties()
+	public async Task<IActionResult> Moties(bool MakeCache = false)
 	{
 		// documentType
 		// onderwerp: { $regex: '.*Motie van het lid Bromet.*', $options: 'i' },
@@ -150,7 +150,7 @@ public partial class WebController : ControllerBase
 {
 	$project:
 	{
-		_id : 1,
+		_id : 0,
 		onderwerp:1,
 
 		documentNummer:1,
@@ -167,12 +167,18 @@ public partial class WebController : ControllerBase
 	}
 },
 {
-	$sort: { date:-1, _id:1 }
+	$sort: { date:-1, documentNummer:1 }
 }
 { $skip: 0 },
-{ $limit: 100 }
+{ $limit: 20 }
 ]
 ";
+
+		if(MakeCache)
+		{
+			var i = a.LastIndexOf(']');
+			a = string.Concat(a.AsSpan(0, i), ",{ $out: { db:'public', coll:'moties'} } ]");
+		}
 
 		var List = await db.GetCollection("documentType").Aggregate(a).ToListAsync();
 

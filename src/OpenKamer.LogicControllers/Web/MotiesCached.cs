@@ -11,12 +11,16 @@ public partial class WebController : ControllerBase
 	[Route("~/api/MotiesCached")]
 	public async Task<IActionResult> MotiesCached()
 	{
-		// documentType
 		var pub = mongo.GetDatabase("public");
 
 		var a = @"[ { $skip: 0 }, { $limit: 100 } ]";
 
-		var List = await pub.GetCollection("list").Aggregate(a).ToListAsync();
+		//var count = await pub.GetCollection("moties").EstimatedDocumentCountAsync();
+
+		//if (count == 0)
+		//	await Moties(true);
+
+		var List = await pub.GetCollection("moties").Aggregate(a).ToListAsync();
 
 		return Ok(new
 		{

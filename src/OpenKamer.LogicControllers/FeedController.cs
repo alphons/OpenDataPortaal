@@ -13,129 +13,124 @@ namespace OpenKamer.LogicControllers;
 public class FeedController
 {
 	private static readonly string FEED = "https://gegevensmagazijn.tweedekamer.nl/SyncFeed/2.0/";
-	
-    private string DB = @"\\192.168.28.195\f$\gegevensmagazijn";
 
-    public FeedController(string DB)
-    {
-        this.DB = DB;
-    }
+	private string DB = @"\\192.168.28.195\f$\gegevensmagazijn";
+
+	public FeedController(string DB)
+	{
+		this.DB = DB;
+	}
 
 	public event EventHandler? OnLog;
 
+	public string LastSkipToken { get; set; }
 
-    private void Log(string message)
-    {
-        OnLog?.Invoke(message, new EventArgs());
-    }
+	private void Log(string message)
+	{
+		OnLog?.Invoke(message, new EventArgs());
+	}
 
 
-    async public Task SyncFeedAsync(string? skiptoken)
-    {
-        Log("SyncFeedAsync");
+	async public Task SyncFeedAsync(string? skiptoken)
+	{
+		Log("SyncFeedAsync");
 
-        XmlNamespaceManager? nsmgr = null;
+		HttpClient httpclient = new();
 
-        HttpClient httpclient = new();
+		XmlDocument xmlDoc = new();
 
-        XmlDocument xmlDoc = new();
+		string urlFeed = FEED;
 
-        string urlFeed = FEED;
+		if (string.IsNullOrWhiteSpace(skiptoken) == false)
+			urlFeed += "?skiptoken=" + skiptoken;
 
-        if (string.IsNullOrWhiteSpace(skiptoken) == false)
-            urlFeed += "?skiptoken=" + skiptoken;
+		if (string.IsNullOrWhiteSpace(skiptoken))
+			skiptoken = "empty";
 
-        if (string.IsNullOrWhiteSpace(skiptoken))
-            skiptoken = "empty";
+		do
+		{
+			LastSkipToken = skiptoken;
 
-        do
-        {
-            Log("Skiptoken: " + skiptoken);
+			Log("Skiptoken: " + skiptoken);
 
-            string FileName = DB + @"\" + skiptoken + ".xml";
+			string FileName = DB + @"\" + skiptoken + ".xml";
 
-            var refresh = true;
+			if (File.Exists(FileName))
+			{
+				Log("Cached");
 
-            if (File.Exists(FileName))
-            {
-                xmlDoc.Load(FileName);
+				xmlDoc.Load(FileName);
+			}
+			else
+			{
+				var xml = await httpclient.GetStringAsync(urlFeed);
 
-                nsmgr = new(xmlDoc.NameTable);
-                if (xmlDoc.DocumentElement != null)
-                    nsmgr.AddNamespace("ns", xmlDoc.DocumentElement.NamespaceURI);
+				await File.WriteAllTextAsync(FileName, xml);
 
-                var resumeNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='resume']", nsmgr);
+				Log("Saved");
 
-                refresh = resumeNode != null;
+				xmlDoc.LoadXml(xml);
+			}
 
-                if (refresh)
-                    Log("Refresh");
-                else
-                    Log("Cached");
-            }
+			XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
+			if (xmlDoc.DocumentElement != null)
+				nsmgr.AddNamespace("ns", xmlDoc.DocumentElement.NamespaceURI);
 
-            if (refresh)
-            {
-                var xml = await httpclient.GetStringAsync(urlFeed);
+			if (nsmgr == null)
+			{
+				Log("XmlNamespaceManager missing");
+				return;
+			}
 
-                await File.WriteAllTextAsync(FileName, xml);
+			var resumeNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='resume']", nsmgr);
 
-                Log("Saved");
+			if(resumeNode != null)
+			{
+				Log("Resume exit");
+				return;
+			}
 
-                xmlDoc.LoadXml(xml);
+			var nextNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='next']", nsmgr);
 
-                nsmgr = new(xmlDoc.NameTable);
-                if (xmlDoc.DocumentElement != null)
-                    nsmgr.AddNamespace("ns", xmlDoc.DocumentElement.NamespaceURI);
-            }
+			if (nextNode == null)
+			{
+				Log("Normal exit");
+				return;
+			}
 
-            if (nsmgr == null)
-            {
-                Log("XmlNamespaceManager missing");
-                return;
-            }
+			if (nextNode.Attributes == null)
+			{
+				Log("Abnormal Attributes exit");
+				return;
+			}
 
-            var nextNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='next']", nsmgr);
+			var attr = nextNode.Attributes["href"];
 
-            if (nextNode == null)
-            {
-                Log("Normal exit");
-                return;
-            }
+			if (attr == null)
+			{
+				Log("Abnormal href exit");
+				return;
+			}
 
-            if (nextNode.Attributes == null)
-            {
-                Log("Abnormal Attributes exit");
-                return;
-            }
+			urlFeed = attr.Value;
 
-            var attr = nextNode.Attributes["href"];
+			if (urlFeed == null)
+			{
+				Log("Abnormal feed exit");
+				return;
+			}
 
-            if (attr == null)
-            {
-                Log("Abnormal href exit");
-                return;
-            }
+			var intI = urlFeed.IndexOf("skiptoken=");
+			if (intI < 0)
+			{
+				Log("Abnormal skiptoken exit");
+				return;
+			}
 
-            urlFeed = attr.Value;
+			skiptoken = urlFeed[(intI + 10)..];
 
-            if (urlFeed == null)
-            {
-                Log("Abnormal feed exit");
-                return;
-            }
+		} while (!string.IsNullOrWhiteSpace(skiptoken));
 
-            var intI = urlFeed.IndexOf("skiptoken=");
-            if (intI < 0)
-            {
-                Log("Abnormal skiptoken exit");
-                return;
-            }
-
-            skiptoken = urlFeed[(intI + 10)..];
-
-        } while (!string.IsNullOrWhiteSpace(skiptoken));
-
-        Log("Abnormal empty skiptoken exit");
-    }
+		Log("Abnormal empty skiptoken exit");
+	}
 }

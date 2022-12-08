@@ -18,19 +18,19 @@ function PageEvents()
 			window[e.target.id].call(e, e);
 	});
 
-	$id("UseCache").on("click", function (e)
+	$id("RefreshCache").on("click", function (e)
 	{
-		if ($id("UseCache").checked)
-			MotiesCached();
+		if ($id("RefreshCache").checked)
+			Moties();
 		else
-			Moties2();
+			MotiesCached();
 	});
 }
 
 function Init()
 {
 	HelloWorld();
-	Moties();
+	MotiesCached();
 }
 
 function NewApi(url, datain, outputelement, templateelement, append)
@@ -52,7 +52,7 @@ function HelloWorld()
 
 function Moties()
 {
-	NewApi("./api/Moties", {}, Output, TemplateMoties, false);
+	NewApi("./api/Moties", { MakeCache : true }, Output, TemplateMoties, false);
 }
 
 function MotiesCached()

@@ -36,16 +36,16 @@
 			this.txtMongoConnectionString = new System.Windows.Forms.TextBox();
 			this.txtDbFileSystem = new System.Windows.Forms.TextBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.lblSpeed = new System.Windows.Forms.Label();
+			this.lblErrors = new System.Windows.Forms.Label();
+			this.label8 = new System.Windows.Forms.Label();
+			this.lblCount = new System.Windows.Forms.Label();
+			this.label5 = new System.Windows.Forms.Label();
 			this.label4 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
 			this.txtDbName = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
-			this.lblCount = new System.Windows.Forms.Label();
-			this.lblErrors = new System.Windows.Forms.Label();
-			this.label8 = new System.Windows.Forms.Label();
-			this.lblSpeed = new System.Windows.Forms.Label();
 			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
@@ -91,7 +91,6 @@
 			this.txtSkipToken.Name = "txtSkipToken";
 			this.txtSkipToken.Size = new System.Drawing.Size(70, 23);
 			this.txtSkipToken.TabIndex = 3;
-			this.txtSkipToken.Text = "15113529";
 			// 
 			// txtMongoConnectionString
 			// 
@@ -134,6 +133,51 @@
 			this.groupBox1.TabIndex = 6;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "settings";
+			// 
+			// lblSpeed
+			// 
+			this.lblSpeed.AutoSize = true;
+			this.lblSpeed.Location = new System.Drawing.Point(273, 22);
+			this.lblSpeed.Name = "lblSpeed";
+			this.lblSpeed.Size = new System.Drawing.Size(16, 15);
+			this.lblSpeed.TabIndex = 15;
+			this.lblSpeed.Text = "...";
+			// 
+			// lblErrors
+			// 
+			this.lblErrors.AutoSize = true;
+			this.lblErrors.Location = new System.Drawing.Point(173, 22);
+			this.lblErrors.Name = "lblErrors";
+			this.lblErrors.Size = new System.Drawing.Size(16, 15);
+			this.lblErrors.TabIndex = 14;
+			this.lblErrors.Text = "...";
+			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(126, 22);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(40, 15);
+			this.label8.TabIndex = 13;
+			this.label8.Text = "Errors:";
+			// 
+			// lblCount
+			// 
+			this.lblCount.AutoSize = true;
+			this.lblCount.Location = new System.Drawing.Point(69, 22);
+			this.lblCount.Name = "lblCount";
+			this.lblCount.Size = new System.Drawing.Size(16, 15);
+			this.lblCount.TabIndex = 12;
+			this.lblCount.Text = "...";
+			// 
+			// label5
+			// 
+			this.label5.AutoSize = true;
+			this.label5.Location = new System.Drawing.Point(22, 22);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(43, 15);
+			this.label5.TabIndex = 11;
+			this.label5.Text = "Count:";
 			// 
 			// label4
 			// 
@@ -179,51 +223,6 @@
 			this.txtDbName.TabIndex = 6;
 			this.txtDbName.Text = "tweedekamer";
 			// 
-			// label5
-			// 
-			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(22, 22);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(43, 15);
-			this.label5.TabIndex = 11;
-			this.label5.Text = "Count:";
-			// 
-			// lblCount
-			// 
-			this.lblCount.AutoSize = true;
-			this.lblCount.Location = new System.Drawing.Point(69, 22);
-			this.lblCount.Name = "lblCount";
-			this.lblCount.Size = new System.Drawing.Size(16, 15);
-			this.lblCount.TabIndex = 12;
-			this.lblCount.Text = "...";
-			// 
-			// lblErrors
-			// 
-			this.lblErrors.AutoSize = true;
-			this.lblErrors.Location = new System.Drawing.Point(173, 22);
-			this.lblErrors.Name = "lblErrors";
-			this.lblErrors.Size = new System.Drawing.Size(16, 15);
-			this.lblErrors.TabIndex = 14;
-			this.lblErrors.Text = "...";
-			// 
-			// label8
-			// 
-			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(126, 22);
-			this.label8.Name = "label8";
-			this.label8.Size = new System.Drawing.Size(40, 15);
-			this.label8.TabIndex = 13;
-			this.label8.Text = "Errors:";
-			// 
-			// lblSpeed
-			// 
-			this.lblSpeed.AutoSize = true;
-			this.lblSpeed.Location = new System.Drawing.Point(273, 22);
-			this.lblSpeed.Name = "lblSpeed";
-			this.lblSpeed.Size = new System.Drawing.Size(16, 15);
-			this.lblSpeed.TabIndex = 15;
-			this.lblSpeed.Text = "...";
-			// 
 			// timer1
 			// 
 			this.timer1.Interval = 1000;
@@ -238,6 +237,7 @@
 			this.Controls.Add(this.textBox1);
 			this.Name = "Form1";
 			this.Text = "3e kamer";
+			this.Load += new System.EventHandler(this.Form1_Load);
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
 			this.ResumeLayout(false);

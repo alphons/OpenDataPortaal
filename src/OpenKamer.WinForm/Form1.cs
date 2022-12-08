@@ -52,6 +52,8 @@ namespace OpenKamer.WinForm
 
 			await feedController.SyncFeedAsync(this.txtSkipToken.Text); // whitespace tot build DB
 
+			this.txtSkipToken.Text = feedController.LastSkipToken;
+
 			this.groupBox1.Enabled = true;
 		}
 
@@ -125,6 +127,16 @@ namespace OpenKamer.WinForm
 
 			this.lblSpeed.Text = $"{speed} e/sec";
 
+		}
+
+		private void Form1_Load(object sender, EventArgs e)
+		{
+			var last = Directory.GetFileSystemEntries(this.txtDbFileSystem.Text, "*.xml")
+				.Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
+				.ToList()
+				.OrderByDescending(x => x)
+				.FirstOrDefault();
+			this.txtSkipToken.Text = last.ToString();
 		}
 	}
 }
