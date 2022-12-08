@@ -1,35 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-
 using MongoDB.Driver;
 using MongoDB.MvcCore;
 
 namespace OpenKamer.LogicControllers.Web;
 
-/*
-
-cd besluitType
-> createIndex( { 'zaak.ref': 1 } )
-
-cd stemmingType
-> createIndex( { 'besluit.ref': 1 } )
-
- */
 public partial class WebController : ControllerBase
 {
 	[HttpPost]
-	[Route("~/api/Documenten")]
-	public async Task<IActionResult> Documenten(string search)
+	[Route("~/api/Moties")]
+	public async Task<IActionResult> Moties()
 	{
 		// documentType
+		// onderwerp: { $regex: '.*Motie van het lid Bromet.*', $options: 'i' },
 		var a = @"
 [
 {
 	$match: 
 	{
 		verwijderd: false,
-		onderwerp: { $regex: '.*"+ search + @".*', $options: 'i' },
-		datum: { $gte:ISODate(""2022-11-01"") , $lt:ISODate(""2022-12-01"") }
+		soort: 'Motie',
+		datum: { $gte:ISODate(""2022-11-01"") , $lt:ISODate(""2022-12-31"") }
 	}
 },
 
@@ -133,13 +124,10 @@ public partial class WebController : ControllerBase
 										}
 									},
 									{
-										$sort: { soort: -1 , actorNaam : 1}
+										$sort: { soort: -1 , fractieGrootte:-1, actorNaam : 1}
 									}
 								]
 							}
-						},
-						{
-							$sort: { 'stemmingen.soort':1, actorNaam:1 }
 						}
 					]
 				}
@@ -162,14 +150,27 @@ public partial class WebController : ControllerBase
 {
 	$project:
 	{
-		verwijderd:0
+		_id : 1,
+		onderwerp:1,
+
+		documentNummer:1,
+		date: { $substr: [ '$datum', 0, 10 ] },
+		nr: '$kamerstukdossier.nummer',
+		toevoeging: '$kamerstukdossier.toevoeging',
+		volgnummer:1,
+
+		besluitTekst: '$zaak.besluiten.besluitTekst',
+		stemmingsSoort: '$zaak.besluiten.stemmingsSoort',
+		voor: { $filter: { input: '$zaak.besluiten.stemmingen', as: 'x', cond: { $eq: [ '$$x.soort', 'Voor' ] }} },
+		tegen: { $filter: { input: '$zaak.besluiten.stemmingen',as: 'x', cond: { $eq: [ '$$x.soort', 'Tegen' ] } } },
+		onbekend: { $filter: { input: '$zaak.besluiten.stemmingen', as: 'x', cond: { $eq: [ '$$x.soort', 'Niet deelgenomen' ] } }}
 	}
 },
 {
-	$sort: { datum:-1, _id:1 }
+	$sort: { date:-1, _id:1 }
 }
 { $skip: 0 },
-{ $limit: 10 }
+{ $limit: 100 }
 ]
 ";
 
@@ -180,8 +181,6 @@ public partial class WebController : ControllerBase
 			List
 		});
 	}
-
-
 
 
 }

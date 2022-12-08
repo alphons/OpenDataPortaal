@@ -30,7 +30,15 @@ function PageEvents()
 function Init()
 {
 	HelloWorld();
-	Moties2();
+	Moties();
+}
+
+function NewApi(url, datain, outputelement, templateelement, append)
+{
+	netproxy(url, datain, function ()
+	{
+		outputelement.Template(templateelement, this, append);
+	});
 }
 
 function HelloWorld()
@@ -42,18 +50,12 @@ function HelloWorld()
 
 }
 
-function Moties2()
+function Moties()
 {
-	netproxy("./api/Moties2", {}, function ()
-	{
-		Output.Template(TemplateMoties, this, false);
-	});
+	NewApi("./api/Moties", {}, Output, TemplateMoties, false);
 }
 
 function MotiesCached()
 {
-	netproxy("./api/MotiesCached", {}, function ()
-	{
-		Output.Template(TemplateMoties, this, false);
-	});
+	NewApi("./api/MotiesCached", {}, Output, TemplateMoties, false);
 }

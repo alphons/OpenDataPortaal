@@ -1,6 +1,5 @@
 ﻿'use strict';
 
-const Entities = $id("Entities");
 const Output = $id("Output");
 const TemplateList = $id("TemplateList");
 const TemplateObjectProperties = $id("TemplateObjectProperties");
@@ -20,7 +19,7 @@ function PageEvents()
 			window[e.target.id].call(e, e);
 	});
 
-	Entities.on("click", function (e)
+	Output.on("click", function (e)
 	{
 		var tr = e.target.parentElement;
 		if (tr.tagName !== "TR")
@@ -43,44 +42,36 @@ function HelloWorld()
 
 }
 
+function NewApi(url, datain, outputelement, templateelement, append)
+{
+	netproxy(url, datain, function ()
+	{
+		outputelement.Template(templateelement, this, append);
+	});
+}
 
 function ShowCollection(colName)
 {
-	netproxy("./api/ShowCollection", { ColName: colName }, function ()
-	{
-		Output.Template(TemplateObjectProperties, this, false);
-	});
+	NewApi("./api/ShowCollection", { ColName: colName }, Output, TemplateObjectProperties, false);
 }
 
 
 function ShowCollections()
 {
-	netproxy("./api/ShowCollections", {}, function ()
-	{
-		Output.Template(TemplateList, this, false);
-	});
+	NewApi("./api/ShowCollections", {}, Output, TemplateList, false);
 }
 
 function Personen()
 {
-	netproxy("./api/Personen", {}, function ()
-	{
-		Output.Template(TemplateNevenfuncties, this, false);
-	});
+	NewApi("./api/Personen", {}, Output, TemplateNevenfuncties, false);
 }
 
 function Fracties()
 {
-	netproxy("./api/Fracties", {}, function ()
-	{
-		Output.Template(TemplateObjectProperties, this, false);
-	});
+	NewApi("./api/Fracties", {}, Output, TemplateObjectProperties, false);
 }
 
-function Moties()
+function Documenten()
 {
-	netproxy("./api/Moties", {}, function ()
-	{
-		Output.Template(TemplateObjectProperties, this, false);
-	});
+	NewApi("./api/Documenten", { search: "Wilders" }, Output, TemplateObjectProperties, false);
 }
