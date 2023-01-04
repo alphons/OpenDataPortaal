@@ -30,8 +30,9 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			this.button1 = new System.Windows.Forms.Button();
-			this.textBox1 = new System.Windows.Forms.TextBox();
 			this.button2 = new System.Windows.Forms.Button();
+			this.ButtonStop = new System.Windows.Forms.Button();
+			this.textBox1 = new System.Windows.Forms.TextBox();
 			this.txtSkipToken = new System.Windows.Forms.TextBox();
 			this.txtMongoConnectionString = new System.Windows.Forms.TextBox();
 			this.txtDbFileSystem = new System.Windows.Forms.TextBox();
@@ -47,6 +48,9 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.txtDbName = new System.Windows.Forms.TextBox();
 			this.timer1 = new System.Windows.Forms.Timer(this.components);
+			this.timer2 = new System.Windows.Forms.Timer(this.components);
+			this.labelStatus = new System.Windows.Forms.Label();
+			this.progressBar1 = new System.Windows.Forms.ProgressBar();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -59,6 +63,27 @@
 			this.button1.Text = "Feed Refresh";
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.Button1_Click);
+			// 
+			// button2
+			// 
+			this.button2.Location = new System.Drawing.Point(243, 50);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(94, 23);
+			this.button2.TabIndex = 2;
+			this.button2.Text = "Get Entries";
+			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.Button2_Click);
+			// 
+			// ButtonStop
+			// 
+			this.ButtonStop.Enabled = false;
+			this.ButtonStop.Location = new System.Drawing.Point(255, 187);
+			this.ButtonStop.Name = "ButtonStop";
+			this.ButtonStop.Size = new System.Drawing.Size(94, 23);
+			this.ButtonStop.TabIndex = 16;
+			this.ButtonStop.Text = "Stop";
+			this.ButtonStop.UseVisualStyleBackColor = true;
+			this.ButtonStop.Click += new System.EventHandler(this.ButtonStop_Click);
 			// 
 			// textBox1
 			// 
@@ -74,16 +99,6 @@
 			this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 			this.textBox1.Size = new System.Drawing.Size(306, 243);
 			this.textBox1.TabIndex = 1;
-			// 
-			// button2
-			// 
-			this.button2.Location = new System.Drawing.Point(243, 50);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(94, 23);
-			this.button2.TabIndex = 2;
-			this.button2.Text = "Get Entries";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.Button2_Click);
 			// 
 			// txtSkipToken
 			// 
@@ -129,7 +144,7 @@
 			this.groupBox1.Controls.Add(this.txtSkipToken);
 			this.groupBox1.Location = new System.Drawing.Point(12, 12);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(342, 243);
+			this.groupBox1.Size = new System.Drawing.Size(342, 169);
 			this.groupBox1.TabIndex = 6;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "settings";
@@ -226,13 +241,37 @@
 			// timer1
 			// 
 			this.timer1.Interval = 1000;
-			this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
+			this.timer1.Tick += new System.EventHandler(this.EntityController_Tick);
+			// 
+			// timer2
+			// 
+			this.timer2.Interval = 1000;
+			this.timer2.Tick += new System.EventHandler(this.FeedController_Tick);
+			// 
+			// labelStatus
+			// 
+			this.labelStatus.AutoSize = true;
+			this.labelStatus.Location = new System.Drawing.Point(22, 195);
+			this.labelStatus.Name = "labelStatus";
+			this.labelStatus.Size = new System.Drawing.Size(16, 15);
+			this.labelStatus.TabIndex = 17;
+			this.labelStatus.Text = "...";
+			// 
+			// progressBar1
+			// 
+			this.progressBar1.Location = new System.Drawing.Point(10, 242);
+			this.progressBar1.Name = "progressBar1";
+			this.progressBar1.Size = new System.Drawing.Size(339, 12);
+			this.progressBar1.TabIndex = 18;
 			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(678, 267);
+			this.Controls.Add(this.progressBar1);
+			this.Controls.Add(this.labelStatus);
+			this.Controls.Add(this.ButtonStop);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.textBox1);
 			this.Name = "Form1";
@@ -248,8 +287,9 @@
 		#endregion
 
 		private Button button1;
-		private TextBox textBox1;
 		private Button button2;
+		private Button ButtonStop;
+		private TextBox textBox1;
 		private TextBox txtSkipToken;
 		private TextBox txtMongoConnectionString;
 		private TextBox txtDbFileSystem;
@@ -265,5 +305,8 @@
 		private Label lblCount;
 		private Label label5;
 		private System.Windows.Forms.Timer timer1;
+		private System.Windows.Forms.Timer timer2;
+		private Label labelStatus;
+		private ProgressBar progressBar1;
 	}
 }

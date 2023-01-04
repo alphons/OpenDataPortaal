@@ -5,10 +5,9 @@
 // https://opendata.tweedekamer.nl/documentatie/syncfeed-api
 //
 
-using System.Xml;
+using System.Xml.Linq;
 
 namespace OpenKamer.LogicControllers;
-
 
 public class FeedController
 {
@@ -16,73 +15,71 @@ public class FeedController
 
 	private string DB = @"\\192.168.28.195\f$\gegevensmagazijn";
 
-	public FeedController(string DB)
+	public FeedController(string DB, string skipToken)
 	{
 		this.DB = DB;
+		this.SkipToken = skipToken;
+		this.Status = string.Empty;
 	}
 
 	public event EventHandler? OnLog;
 
-	public string LastSkipToken { get; set; }
+	public string Status { get; set; }
+
+	public string SkipToken { get; set; }
+
+	public int FileCount { get; set; }
 
 	private void Log(string message)
 	{
 		OnLog?.Invoke(message, new EventArgs());
 	}
 
-
-	async public Task SyncFeedAsync(string? skiptoken)
+	async public Task SyncFeedAsync(CancellationToken cancellationToken)
 	{
 		Log("SyncFeedAsync");
 
 		HttpClient httpclient = new();
 
-		XmlDocument xmlDoc = new();
+		XDocument xDoc;
 
-		string urlFeed = FEED;
+		XNamespace ns = "http://www.w3.org/2005/Atom";
 
-		if (string.IsNullOrWhiteSpace(skiptoken) == false)
-			urlFeed += "?skiptoken=" + skiptoken;
+		string? urlFeed = FEED;
 
-		if (string.IsNullOrWhiteSpace(skiptoken))
-			skiptoken = "empty";
+		this.FileCount = 0;
+
+		if (string.IsNullOrWhiteSpace(SkipToken) == false)
+			urlFeed += "?skiptoken=" + this.SkipToken;
+
+		if (string.IsNullOrWhiteSpace(this.SkipToken))
+			this.SkipToken = "0";
 
 		do
 		{
-			LastSkipToken = skiptoken;
+			this.FileCount++;
 
-			Log("Skiptoken: " + skiptoken);
-
-			string FileName = DB + @"\" + skiptoken + ".xml";
+			var FileName = DB + @"\" + this.SkipToken + ".xml";
 
 			if (File.Exists(FileName))
 			{
-				Log("Cached");
-
-				xmlDoc.Load(FileName);
+				Status = "cached";
 			}
 			else
 			{
-				var xml = await httpclient.GetStringAsync(urlFeed);
+				var xml = await httpclient.GetStringAsync(urlFeed, cancellationToken);
 
-				await File.WriteAllTextAsync(FileName, xml);
+				await File.WriteAllTextAsync(FileName, xml, cancellationToken);
 
-				Log("Saved");
-
-				xmlDoc.LoadXml(xml);
+				Status = "saved";
 			}
 
-			XmlNamespaceManager nsmgr = new(xmlDoc.NameTable);
-			if (xmlDoc.DocumentElement != null)
-				nsmgr.AddNamespace("ns", xmlDoc.DocumentElement.NamespaceURI);
+			using var textReader = File.OpenText(FileName);
+			xDoc = await XDocument.LoadAsync(textReader, LoadOptions.None, cancellationToken);
 
-			if (nsmgr == null)
-			{
-				Log("XmlNamespaceManager missing");
-				return;
-			}
+			var links = xDoc.Descendants(ns + "link");
 
-			var resumeNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='resume']", nsmgr);
+			var resumeNode = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "resume");
 
 			if(resumeNode != null)
 			{
@@ -90,7 +87,7 @@ public class FeedController
 				return;
 			}
 
-			var nextNode = xmlDoc.SelectSingleNode("/ns:feed/ns:link[@rel='next']", nsmgr);
+			var nextNode = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "next");
 
 			if (nextNode == null)
 			{
@@ -98,21 +95,7 @@ public class FeedController
 				return;
 			}
 
-			if (nextNode.Attributes == null)
-			{
-				Log("Abnormal Attributes exit");
-				return;
-			}
-
-			var attr = nextNode.Attributes["href"];
-
-			if (attr == null)
-			{
-				Log("Abnormal href exit");
-				return;
-			}
-
-			urlFeed = attr.Value;
+			urlFeed = nextNode.Attribute("href")?.Value;
 
 			if (urlFeed == null)
 			{
@@ -127,9 +110,9 @@ public class FeedController
 				return;
 			}
 
-			skiptoken = urlFeed[(intI + 10)..];
+			this.SkipToken = urlFeed[(intI + 10)..];
 
-		} while (!string.IsNullOrWhiteSpace(skiptoken));
+		} while (!string.IsNullOrWhiteSpace(this.SkipToken));
 
 		Log("Abnormal empty skiptoken exit");
 	}

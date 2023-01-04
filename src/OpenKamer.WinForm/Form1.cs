@@ -1,142 +1,182 @@
 //
 // (c) 2022, Alphons van der Heijden
 //
-
-// nuget MongoDB.MvcCore
-
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.MvcCore;
-
 using System.Diagnostics;
 
 using OpenKamer.LogicControllers;
 
-namespace OpenKamer.WinForm
+namespace OpenKamer.WinForm;
+
+public partial class Form1 : Form
 {
-    public partial class Form1 : Form
+	private Stopwatch? sw;
+
+	private CancellationTokenSource? cancelSource;
+
+	private EntityController? entityController1;
+	private FeedController? feedController1;
+
+	public Form1()
 	{
-		private IMongoDatabase? db;
+		InitializeComponent();
 
-		private Stopwatch? sw;
-		private long lngError;
-		private long lngCount;
-
-		public Form1()
-		{
-			InitializeComponent();
-
-			this.Text += $" (MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version})";
-		}
-
-		private void OnLog(object? sender, EventArgs e)
-		{
-			Log(string.Empty+sender);
-		}
-
-		private void Log(string line)
-		{
-			this.textBox1.Invoke((MethodInvoker)delegate
-			{
-				this.textBox1.AppendText(line + Environment.NewLine);
-			});
-		}
-
-		async private void Button1_Click(object sender, EventArgs e)
-		{
-			this.groupBox1.Enabled = false;
-
-			FeedController feedController = new(this.txtDbFileSystem.Text);
-
-			feedController.OnLog += OnLog;
-
-			await feedController.SyncFeedAsync(this.txtSkipToken.Text); // whitespace tot build DB
-
-			this.txtSkipToken.Text = feedController.LastSkipToken;
-
-			this.groupBox1.Enabled = true;
-		}
-
-		async private void Button2_Click(object sender, EventArgs e)
-		{
-			this.groupBox1.Enabled = false;
-
-			MongoClient mongo = new(this.txtMongoConnectionString.Text);
-			this.db = mongo.GetDatabase(this.txtDbName.Text);
-
-			this.lngCount = 0;
-			this.lngError = 0;
-
-			this.sw = Stopwatch.StartNew();
-			this.timer1.Start();
-
-			EntityController entityController = new(this.txtDbFileSystem.Text);
-			entityController.OnLog += OnLog;
-			entityController.OnEntity += EntityController_OnEntity;
-			await entityController.DecodeEntriesAsync(this.txtSkipToken.Text); // whitespace tot start from beginning
-
-			this.timer1.Stop();
-
-			this.groupBox1.Enabled = true;
-		}
-
-		/// <summary>
-		/// Replacing (or adding) entity to mongo db
-		/// </summary>
-		/// <param name="entity"></param>
-		/// <param name="e"></param>
-		/// <returns></returns>
-		async private Task EntityController_OnEntity(object entity, EventArgs e)
-		{
-			if (db == null)
-				return;
-
-			var collection = this.db.GetCollection(entity.GetType().Name);
-
-			if (collection == null)
-				return;
-
-			try
-			{
-				var replaceOneResult = await collection.ReplaceOneByIdAsync(entity);
-				this.lngCount++;
-			}
-			catch (BsonSerializationException)
-			{
-				this.lngError++;
-			}
-			catch (MongoWriteException)
-			{
-				this.lngError++;
-			}
-			catch (Exception)
-			{
-				this.lngError++;
-			}
-		}
-
-		private void Timer1_Tick(object sender, EventArgs e)
-		{
-			this.lblCount.Text = this.lngCount.ToString();
-			this.lblErrors.Text = this.lngError.ToString();
-
-			if (this.sw == null)
-				return;
-
-			var speed = (1000 * this.lngCount) / this.sw.ElapsedMilliseconds;
-
-			this.lblSpeed.Text = $"{speed} e/sec";
-
-		}
-
-		private void Form1_Load(object sender, EventArgs e)
-		{
-			var last = Directory.GetFileSystemEntries(this.txtDbFileSystem.Text, "*.xml")
-				.Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
-				.ToList()
-				.OrderByDescending(x => x)
-				.FirstOrDefault();
-			this.txtSkipToken.Text = last.ToString();
-		}
+		//this.Text += $" (MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version})";
 	}
+
+	private void OnLog(object? sender, EventArgs e)
+	{
+		Log(sender + Environment.NewLine);
+	}
+
+	private void Log(string line)
+	{
+		this.textBox1.Invoke((MethodInvoker)delegate
+		{
+			this.textBox1.AppendText(line);
+		});
+	}
+
+	private void Form1_Load(object sender, EventArgs e)
+	{
+		var lastXml = Directory.GetFileSystemEntries(this.txtDbFileSystem.Text, "*.xml")
+			.OrderByDescending(x => x)
+			.ToList()
+			.FirstOrDefault();
+
+		if (lastXml == null)
+			return;
+
+		var last = long.Parse(Path.GetFileNameWithoutExtension(lastXml));
+		this.txtSkipToken.Text = last.ToString();
+	}
+
+	private void ButtonStop_Click(object sender, EventArgs e)
+	{
+		this.cancelSource?.Cancel();
+
+		this.ButtonStop.Enabled = false;
+		this.groupBox1.Enabled = true;
+	}
+
+
+	async private void Button1_Click(object sender, EventArgs e)
+	{
+		this.cancelSource = new();
+
+		this.groupBox1.Enabled = false;
+
+		this.ButtonStop.Enabled = true;
+
+		this.lblErrors.Text = "0";
+
+		this.progressBar1.Value = 0;
+
+		// txtSkipToken whitespace tot start from 0
+		this.feedController1 = new FeedController(this.txtDbFileSystem.Text, this.txtSkipToken.Text);
+
+		this.feedController1.OnLog += OnLog;
+
+		this.sw = Stopwatch.StartNew();
+		this.timer2.Start();
+
+		try
+		{
+			await this.feedController1.SyncFeedAsync(cancelSource.Token);
+		}
+		catch(OperationCanceledException)
+		{
+
+		}
+
+		this.timer2.Stop();
+
+		this.txtSkipToken.Text = this.feedController1.SkipToken;
+
+		this.ButtonStop.Enabled = false;
+
+		this.groupBox1.Enabled = true;
+
+		this.labelStatus.Text = "...";
+
+		this.progressBar1.Value = 0;
+	}
+
+	async private void Button2_Click(object sender, EventArgs e)
+	{
+		this.labelStatus.Text = "...";
+
+		this.progressBar1.Value = 0;
+
+		this.cancelSource = new();
+
+		this.groupBox1.Enabled = false;
+
+		this.ButtonStop.Enabled = true;
+
+		this.sw = Stopwatch.StartNew();
+		this.timer1.Start();
+
+		// txtSkipToken whitespace tot start from beginning
+		this.entityController1 = new EntityController(this.txtMongoConnectionString.Text, this.txtDbName.Text, this.txtDbFileSystem.Text, this.txtSkipToken.Text);
+		this.entityController1.OnLog += OnLog;
+
+		try
+		{
+			await this.entityController1.DecodeEntriesAsync(this.cancelSource.Token);
+		}
+		catch (OperationCanceledException)
+		{
+
+		}
+
+		this.txtSkipToken.Text = this.entityController1.SkipToken;
+
+		this.timer1.Stop();
+
+		this.ButtonStop.Enabled = false;
+
+		this.groupBox1.Enabled = true;
+
+		this.progressBar1.Value = 0;
+	}
+
+
+
+	private void EntityController_Tick(object sender, EventArgs e)
+	{
+		if (this.sw == null || this.entityController1 == null)
+			return;
+
+		this.lblCount.Text = this.entityController1.EntityCount.ToString();
+		this.lblErrors.Text = this.entityController1.Error.ToString();
+
+		this.progressBar1.Value = (this.entityController1.FileCount / 200);
+
+		this.labelStatus.Text = $"Files: {this.entityController1.FileCount}";
+
+		var speed = (1000 * this.entityController1.EntityCount) / this.sw.ElapsedMilliseconds;
+
+		this.lblSpeed.Text = $"{speed} e/sec";
+
+		this.txtSkipToken.Text = this.entityController1.SkipToken;
+	}
+
+	private void FeedController_Tick(object sender, EventArgs e)
+	{
+		if (this.sw == null || this.feedController1 == null)
+			return;
+
+		this.lblCount.Text = this.feedController1.FileCount.ToString();
+
+		this.progressBar1.Value = (this.feedController1.FileCount / 200);
+
+		var speed = (1000 * this.feedController1.FileCount) / this.sw.ElapsedMilliseconds;
+
+		this.lblSpeed.Text = $"{speed} e/sec";
+
+		this.txtSkipToken.Text = this.feedController1.SkipToken;
+
+		this.labelStatus.Text = this.feedController1.Status;
+	}
+
 }

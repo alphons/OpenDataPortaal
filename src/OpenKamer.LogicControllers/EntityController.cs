@@ -8,6 +8,12 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Diagnostics;
 
+// nuget MongoDB.MvcCore
+
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MongoDB.MvcCore;
+
 using nl.tweedekamer.opendata.DataModel;
 
 
@@ -15,16 +21,31 @@ namespace OpenKamer.LogicControllers;
 
 public class EntityController
 {
+	private readonly IMongoDatabase mongodb;
 
-	private readonly string DB;
-	public EntityController(string DB)
+	private readonly string FilesDirectory;
+	public string SkipToken { get; set; }
+	public int FileCount { get; set; }
+	public int EntityCount { get; set; }
+	public int Error { get; set; }
+
+	public EntityController(string MongoConnectionString, string MongoDbName, string FilesDirectory, string skiptoken)
 	{
-		this.DB = DB;
+		this.FilesDirectory = FilesDirectory;
+
+		this.SkipToken = skiptoken;
+
+		this.FileCount = 0;
+
+		this.EntityCount = 0;
+
+		this.Error = 0;
+
+		var mongoClient = new MongoClient(MongoConnectionString);
+
+		this.mongodb = mongoClient.GetDatabase(MongoDbName);
 	}
 
-	public delegate Task AsyncEventHandler(object sender, EventArgs e);
-
-	public event AsyncEventHandler? OnEntity;
 
 	public event EventHandler? OnLog;
 
@@ -33,20 +54,20 @@ public class EntityController
 		OnLog?.Invoke(message, new EventArgs());
 	}
 
-	async public Task DecodeEntriesAsync(string? skiptoken)
+	async public Task DecodeEntriesAsync(CancellationToken cancellationToken)
 	{
 		Log("DecodeEntriesAsync");
 
 		XmlSerializer serializer = new(typeof(Feed));
 
-		if (string.IsNullOrWhiteSpace(skiptoken))
-			skiptoken = "empty";
+		if (string.IsNullOrWhiteSpace(SkipToken))
+			SkipToken = "0";
 
 		do
 		{
-			Log("Skiptoken: " + skiptoken);
+			this.FileCount++;
 
-			string FileName = DB + @"\" + skiptoken + ".xml";
+			var FileName = FilesDirectory + @"\" + SkipToken + ".xml";
 
 			using StreamReader reader = new(FileName);
 
@@ -54,7 +75,7 @@ public class EntityController
 
 			if (feed == null)
 			{
-				Log("no valid feed exit");
+				Log("No valid feed exit");
 				return;
 			}
 
@@ -79,16 +100,43 @@ public class EntityController
 				return;
 			}
 			if (intI > 0)
-				skiptoken = nextNode.Href[(intI + 10)..];
+				SkipToken = nextNode.Href[(intI + 10)..];
 
-			await ProcessEntitiesAsync2(feed);
+			await ProcessEntitiesAsync(feed, cancellationToken);
 
-		} while (!string.IsNullOrWhiteSpace(skiptoken));
+		} while (!string.IsNullOrWhiteSpace(SkipToken));
 
 		Log("Abnormal empty skiptoken exit");
 	}
 
-	async private Task<T?> GetEntityAsync<T>(XmlNode xmlNode)
+	async private Task ReplaceEntityByIdAsync(object entity, CancellationToken cancellationToken)
+	{
+		var collection = this.mongodb.GetCollection(entity.GetType().Name);
+
+		if (collection == null)
+			return;
+
+		try
+		{
+			var replaceOneResult = await collection.ReplaceOneByIdAsync(entity, cancellationToken);
+			
+			this.EntityCount++;
+		}
+		catch (BsonSerializationException)
+		{
+			this.Error++;
+		}
+		catch (MongoWriteException)
+		{
+			this.Error++;
+		}
+		catch (Exception)
+		{
+			this.Error++;
+		}
+	}
+
+	async private Task<T?> GetEntityAsync<T>(XmlNode xmlNode, CancellationToken cancellationToken)
 	{
 		XmlSerializer serializer = new(typeof(T));
 
@@ -98,8 +146,8 @@ public class EntityController
 		try
 		{
 			var result = (T?)serializer.Deserialize(new XmlNodeReader(xmlNode));
-			if(result != null && OnEntity != null)
-				await OnEntity.Invoke(result, new EventArgs());
+			if(result != null)
+				await ReplaceEntityByIdAsync(result, cancellationToken);
 			return result;
 		}
 		catch (Exception eeee)
@@ -112,9 +160,8 @@ public class EntityController
 
 	#pragma warning disable IDE0059
 
-	async private Task ProcessEntitiesAsync2(Feed feed)
+	async private Task ProcessEntitiesAsync(Feed feed, CancellationToken cancellationToken)
 	{
-
 		var entries = feed.Entries;
 
 		if (entries == null)
@@ -128,117 +175,117 @@ public class EntityController
 			if (entry.Content.FirstChild == null)
 				continue;
 
+			await Task.Delay(1, cancellationToken);
+
 			switch (entry.Category.Term)
 			{
 				default:
 					Log($"Unknown Category {entry.Category.Term}");
 					break;
 				case "zaal":
-					var zaal = await GetEntityAsync<zaalType>(entry.Content.FirstChild);
+					var zaal = await GetEntityAsync<zaalType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "reservering":
-					var reservering = await GetEntityAsync<reserveringType>(entry.Content.FirstChild);
+					var reservering = await GetEntityAsync<reserveringType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "vergadering":
-					var vergadering = await GetEntityAsync<vergaderingType>(entry.Content.FirstChild);
+					var vergadering = await GetEntityAsync<vergaderingType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "verslag":
-					var verslag = await GetEntityAsync<verslagType>(entry.Content.FirstChild);
+					var verslag = await GetEntityAsync<verslagType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "activiteit":
-					var activiteit = await GetEntityAsync<activiteitType>(entry.Content.FirstChild);
+					var activiteit = await GetEntityAsync<activiteitType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "documentVersie":
-					var documentversie = await GetEntityAsync<documentVersieType>(entry.Content.FirstChild);
+					var documentversie = await GetEntityAsync<documentVersieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "document":
-					var document = await GetEntityAsync<documentType>(entry.Content.FirstChild); // document.Soort == "Motie"
+					var document = await GetEntityAsync<documentType>(entry.Content.FirstChild, cancellationToken); // document.Soort == "Motie"
 					break;
 				case "zaak":
-					var zaak = await GetEntityAsync<zaakType>(entry.Content.FirstChild);
+					var zaak = await GetEntityAsync<zaakType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "agendapunt":
-					var agendapunt = await GetEntityAsync<agendapuntType>(entry.Content.FirstChild);
+					var agendapunt = await GetEntityAsync<agendapuntType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "besluit":
-					var besluit = await GetEntityAsync<besluitType>(entry.Content.FirstChild);
+					var besluit = await GetEntityAsync<besluitType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "kamerstukdossier":
-					var kamerstukdossier = await GetEntityAsync<kamerstukdossierType>(entry.Content.FirstChild);
+					var kamerstukdossier = await GetEntityAsync<kamerstukdossierType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "activiteitActor":
-					var activiteitActor = await GetEntityAsync<activiteitActorType>(entry.Content.FirstChild);
+					var activiteitActor = await GetEntityAsync<activiteitActorType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "zaakActor":
-					var zaakActor = await GetEntityAsync<zaakActorType>(entry.Content.FirstChild);
+					var zaakActor = await GetEntityAsync<zaakActorType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "documentActor":
-					var documentActor = await GetEntityAsync<documentActorType>(entry.Content.FirstChild);
+					var documentActor = await GetEntityAsync<documentActorType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "stemming":
-					var stemming = await GetEntityAsync<stemmingType>(entry.Content.FirstChild);
+					var stemming = await GetEntityAsync<stemmingType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoon":
-					var persoon = await GetEntityAsync<persoonType>(entry.Content.FirstChild);
+					var persoon = await GetEntityAsync<persoonType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "fractie":
-					var fractie = await GetEntityAsync<fractieType>(entry.Content.FirstChild);
+					var fractie = await GetEntityAsync<fractieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonNevenfunctie":
-					var persoonNevenfunctie = await GetEntityAsync<persoonNevenfunctieType>(entry.Content.FirstChild);
+					var persoonNevenfunctie = await GetEntityAsync<persoonNevenfunctieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissie":
-					var commissie = await GetEntityAsync<commissieType>(entry.Content.FirstChild);
+					var commissie = await GetEntityAsync<commissieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonGeschenk":
-					var persoonGeschenk = await GetEntityAsync<persoonGeschenkType>(entry.Content.FirstChild);
+					var persoonGeschenk = await GetEntityAsync<persoonGeschenkType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonReis":
-					var persoonReis = await GetEntityAsync<persoonReisType>(entry.Content.FirstChild);
+					var persoonReis = await GetEntityAsync<persoonReisType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonLoopbaan":
-					var persoonLoopbaan = await GetEntityAsync<persoonLoopbaanType>(entry.Content.FirstChild);
+					var persoonLoopbaan = await GetEntityAsync<persoonLoopbaanType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonOnderwijs":
-					var persoonOnderwijs = await GetEntityAsync<persoonOnderwijsType>(entry.Content.FirstChild);
+					var persoonOnderwijs = await GetEntityAsync<persoonOnderwijsType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieZetel":
-					var commissieZetel = await GetEntityAsync<commissieZetelType>(entry.Content.FirstChild);
+					var commissieZetel = await GetEntityAsync<commissieZetelType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieZetelVastPersoon":
-					var commissieZetelVastPersoon = await GetEntityAsync<commissieZetelVastPersoonType>(entry.Content.FirstChild);
+					var commissieZetelVastPersoon = await GetEntityAsync<commissieZetelVastPersoonType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieZetelVervangerVacature":
-					var commissieZetelVervangerVacature = await GetEntityAsync<commissieZetelVervangerVacatureType>(entry.Content.FirstChild);
+					var commissieZetelVervangerVacature = await GetEntityAsync<commissieZetelVervangerVacatureType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieZetelVervangerPersoon":
-					var commissieZetelVervangerPersoon = await GetEntityAsync<commissieZetelVervangerPersoonType>(entry.Content.FirstChild);
+					var commissieZetelVervangerPersoon = await GetEntityAsync<commissieZetelVervangerPersoonType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieZetelVastVacature":
-					var commissieZetelVastVacature = await GetEntityAsync<commissieZetelVastVacatureType>(entry.Content.FirstChild);
+					var commissieZetelVastVacature = await GetEntityAsync<commissieZetelVastVacatureType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "fractieZetel":
-					var fractieZetel = await GetEntityAsync<fractieZetelType>(entry.Content.FirstChild);
+					var fractieZetel = await GetEntityAsync<fractieZetelType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "fractieZetelPersoon":
-					var fractieZetelPersoon = await GetEntityAsync<fractieZetelPersoonType>(entry.Content.FirstChild);
+					var fractieZetelPersoon = await GetEntityAsync<fractieZetelPersoonType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "fractieZetelVacature":
-					var fractieZetelVacature = await GetEntityAsync<fractieZetelVacatureType>(entry.Content.FirstChild);
+					var fractieZetelVacature = await GetEntityAsync<fractieZetelVacatureType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonNevenfunctieInkomsten":
-					var persoonNevenfunctieInkomsten = await GetEntityAsync<persoonNevenfunctieInkomstenType>(entry.Content.FirstChild);
+					var persoonNevenfunctieInkomsten = await GetEntityAsync<persoonNevenfunctieInkomstenType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "commissieContactinformatie":
-					var commissieContactinformatie = await GetEntityAsync<commissieContactinformatieType>(entry.Content.FirstChild);
+					var commissieContactinformatie = await GetEntityAsync<commissieContactinformatieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 				case "persoonContactinformatie":
-					var persoonContactinformatie = await GetEntityAsync<persoonContactinformatieType>(entry.Content.FirstChild);
+					var persoonContactinformatie = await GetEntityAsync<persoonContactinformatieType>(entry.Content.FirstChild, cancellationToken);
 					break;
 			}
 		}
-
-		//Log($"{entries.Length}");
 	}
 
 #pragma warning restore IDE0059
