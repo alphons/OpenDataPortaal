@@ -65,6 +65,8 @@ public class EntityController
 
 		do
 		{
+			await Task.Delay(100, cancellationToken);
+
 			this.FileCount++;
 
 			var FileName = FilesDirectory + @"\" + SkipToken + ".xml";
@@ -174,8 +176,6 @@ public class EntityController
 		{
 			if (entry.Content.FirstChild == null)
 				continue;
-
-			await Task.Delay(1, cancellationToken);
 
 			switch (entry.Category.Term)
 			{

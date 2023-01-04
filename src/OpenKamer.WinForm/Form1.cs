@@ -150,7 +150,7 @@ public partial class Form1 : Form
 		this.lblCount.Text = this.entityController1.EntityCount.ToString();
 		this.lblErrors.Text = this.entityController1.Error.ToString();
 
-		this.progressBar1.Value = (this.entityController1.FileCount / 200);
+		this.progressBar1.Value = Math.Min(100, (this.entityController1.FileCount / 200));
 
 		this.labelStatus.Text = $"Files: {this.entityController1.FileCount}";
 
@@ -168,7 +168,7 @@ public partial class Form1 : Form
 
 		this.lblCount.Text = this.feedController1.FileCount.ToString();
 
-		this.progressBar1.Value = (this.feedController1.FileCount / 200);
+		this.progressBar1.Value = Math.Min(100, (this.feedController1.FileCount / 200) );
 
 		var speed = (1000 * this.feedController1.FileCount) / this.sw.ElapsedMilliseconds;
 
