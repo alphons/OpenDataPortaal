@@ -98,6 +98,8 @@ public partial class Form1 : Form
 
 		this.progressBar1.Value = 0;
 
+		this.lblDuration.Text = "...";
+
 		GC.Collect();
 	}
 
@@ -143,6 +145,8 @@ public partial class Form1 : Form
 		this.groupBox1.Enabled = true;
 
 		this.progressBar1.Value = 0;
+
+		this.lblDuration.Text = "...";
 
 		GC.Collect();
 	}
