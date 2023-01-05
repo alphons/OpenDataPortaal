@@ -97,6 +97,8 @@ public partial class Form1 : Form
 		this.groupBox1.Enabled = true;
 
 		this.progressBar1.Value = 0;
+
+		GC.Collect();
 	}
 
 	async private void Button2_Click(object sender, EventArgs e)
@@ -141,6 +143,8 @@ public partial class Form1 : Form
 		this.groupBox1.Enabled = true;
 
 		this.progressBar1.Value = 0;
+
+		GC.Collect();
 	}
 
 

@@ -67,11 +67,16 @@ public class EntityController
 
 		var list = Directory
 			.GetFiles(this.FilesDirectory, "*.xml")
-			.Select(x => Path.GetFileNameWithoutExtension(x))
+			.Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
+			.OrderBy(x => x)
+			.Select(x => x.ToString())
 			.ToList();
 
-		this.FilesTotal = list.Count;
-		this.FilesIndex = list.IndexOf(this.Token);
+		this.FilesIndex = 0;
+		this.FilesTotal = list.Count - list.IndexOf(this.Token);
+
+		list.Clear();
+		GC.Collect();
 
 		do
 		{
@@ -111,6 +116,9 @@ public class EntityController
 				Token = nextNode.Href[(intI + 10)..];
 
 			await ProcessEntitiesAsync(feed, cancellationToken);
+
+			if (cancellationToken.IsCancellationRequested)
+				return;
 
 			this.FilesIndex++;
 
@@ -162,6 +170,10 @@ public class EntityController
 				await ReplaceEntityByIdAsync(result, cancellationToken);
 			return result;
 		}
+		catch(OperationCanceledException)
+		{
+			return default;
+		}
 		catch (Exception eeee)
 		{
 			Debug.WriteLine(eeee.ToString());
@@ -184,6 +196,9 @@ public class EntityController
 
 		foreach (var entry in entries)
 		{
+			if (cancellationToken.IsCancellationRequested)
+				break;
+
 			if (entry.Content.FirstChild == null)
 				continue;
 

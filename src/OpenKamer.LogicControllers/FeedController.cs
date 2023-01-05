@@ -60,11 +60,13 @@ public class FeedController
 
 		var list = Directory
 			.GetFiles(this.FilesDirectory, "*.xml")
-			.Select(x => Path.GetFileNameWithoutExtension(x))
+			.Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
+			.OrderBy(x => x)
+			.Select(x => x.ToString())
 			.ToList();
 
-		this.FilesTotal = list.Count;
-		this.FilesIndex = list.IndexOf(this.Token);
+		this.FilesIndex = 0;
+		this.FilesTotal = list.Count - list.IndexOf(this.Token);
 
 		list.Clear();
 		GC.Collect();
