@@ -5,6 +5,7 @@
 // https://opendata.tweedekamer.nl/documentatie/syncfeed-api
 //
 
+using MongoDB.MvcCore;
 using System.Xml.Linq;
 
 namespace OpenKamer.LogicControllers;
@@ -13,12 +14,12 @@ public class FeedController
 {
 	private static readonly string FEED = "https://gegevensmagazijn.tweedekamer.nl/SyncFeed/2.0/";
 
-	private string DB = @"\\192.168.28.195\f$\gegevensmagazijn";
+	private string FilesDirectory;
 
-	public FeedController(string DB, string skipToken)
+	public FeedController(string FilesDirectory, string Token)
 	{
-		this.DB = DB;
-		this.SkipToken = skipToken;
+		this.FilesDirectory = FilesDirectory;
+		this.Token = Token;
 		this.Status = string.Empty;
 	}
 
@@ -26,9 +27,11 @@ public class FeedController
 
 	public string Status { get; set; }
 
-	public string SkipToken { get; set; }
+	public string Token { get; set; }
 
-	public int FileCount { get; set; }
+	public int FilesTotal { get; set; }
+
+	public int FilesIndex { get; set; }
 
 	private void Log(string message)
 	{
@@ -37,6 +40,8 @@ public class FeedController
 
 	async public Task SyncFeedAsync(CancellationToken cancellationToken)
 	{
+		Log($"MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version}");
+
 		Log("SyncFeedAsync");
 
 		HttpClient httpclient = new();
@@ -47,19 +52,26 @@ public class FeedController
 
 		string? urlFeed = FEED;
 
-		this.FileCount = 0;
+		if (string.IsNullOrWhiteSpace(Token) == false)
+			urlFeed += "?skiptoken=" + this.Token;
 
-		if (string.IsNullOrWhiteSpace(SkipToken) == false)
-			urlFeed += "?skiptoken=" + this.SkipToken;
+		if (string.IsNullOrWhiteSpace(this.Token))
+			this.Token = "0";
 
-		if (string.IsNullOrWhiteSpace(this.SkipToken))
-			this.SkipToken = "0";
+		var list = Directory
+			.GetFiles(this.FilesDirectory, "*.xml")
+			.Select(x => Path.GetFileNameWithoutExtension(x))
+			.ToList();
+
+		this.FilesTotal = list.Count;
+		this.FilesIndex = list.IndexOf(this.Token);
+
+		list.Clear();
+		GC.Collect();
 
 		do
 		{
-			this.FileCount++;
-
-			var FileName = DB + @"\" + this.SkipToken + ".xml";
+			var FileName = FilesDirectory + @"\" + this.Token + ".xml";
 
 			if (File.Exists(FileName))
 			{
@@ -75,6 +87,7 @@ public class FeedController
 			}
 
 			using var textReader = File.OpenText(FileName);
+
 			xDoc = await XDocument.LoadAsync(textReader, LoadOptions.None, cancellationToken);
 
 			var links = xDoc.Descendants(ns + "link");
@@ -110,9 +123,11 @@ public class FeedController
 				return;
 			}
 
-			this.SkipToken = urlFeed[(intI + 10)..];
+			this.Token = urlFeed[(intI + 10)..];
 
-		} while (!string.IsNullOrWhiteSpace(this.SkipToken));
+			this.FilesIndex++;
+
+		} while (!string.IsNullOrWhiteSpace(this.Token));
 
 		Log("Abnormal empty skiptoken exit");
 	}

@@ -24,18 +24,21 @@ public class EntityController
 	private readonly IMongoDatabase mongodb;
 
 	private readonly string FilesDirectory;
-	public string SkipToken { get; set; }
-	public int FileCount { get; set; }
+	public string Token { get; set; }
+	public int FilesTotal { get; set; }
+	public int FilesIndex { get; set; }
 	public int EntityCount { get; set; }
 	public int Error { get; set; }
 
-	public EntityController(string MongoConnectionString, string MongoDbName, string FilesDirectory, string skiptoken)
+	public event EventHandler? OnLog;
+
+	public EntityController(string MongoConnectionString, string MongoDbName, string FilesDirectory, string token)
 	{
 		this.FilesDirectory = FilesDirectory;
 
-		this.SkipToken = skiptoken;
+		this.Token = token;
 
-		this.FileCount = 0;
+		this.FilesIndex = 0;
 
 		this.EntityCount = 0;
 
@@ -46,9 +49,6 @@ public class EntityController
 		this.mongodb = mongoClient.GetDatabase(MongoDbName);
 	}
 
-
-	public event EventHandler? OnLog;
-
 	private void Log(string message)
 	{
 		OnLog?.Invoke(message, new EventArgs());
@@ -56,20 +56,26 @@ public class EntityController
 
 	async public Task DecodeEntriesAsync(CancellationToken cancellationToken)
 	{
+		Log($"MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version}");
+
 		Log("DecodeEntriesAsync");
 
 		XmlSerializer serializer = new(typeof(Feed));
 
-		if (string.IsNullOrWhiteSpace(SkipToken))
-			SkipToken = "0";
+		if (string.IsNullOrWhiteSpace(Token))
+			Token = "0";
+
+		var list = Directory
+			.GetFiles(this.FilesDirectory, "*.xml")
+			.Select(x => Path.GetFileNameWithoutExtension(x))
+			.ToList();
+
+		this.FilesTotal = list.Count;
+		this.FilesIndex = list.IndexOf(this.Token);
 
 		do
 		{
-			await Task.Delay(100, cancellationToken);
-
-			this.FileCount++;
-
-			var FileName = FilesDirectory + @"\" + SkipToken + ".xml";
+			var FileName = FilesDirectory + @"\" + Token + ".xml";
 
 			using StreamReader reader = new(FileName);
 
@@ -102,11 +108,15 @@ public class EntityController
 				return;
 			}
 			if (intI > 0)
-				SkipToken = nextNode.Href[(intI + 10)..];
+				Token = nextNode.Href[(intI + 10)..];
 
 			await ProcessEntitiesAsync(feed, cancellationToken);
 
-		} while (!string.IsNullOrWhiteSpace(SkipToken));
+			this.FilesIndex++;
+
+			await Task.Delay(100, cancellationToken);
+
+		} while (!string.IsNullOrWhiteSpace(Token));
 
 		Log("Abnormal empty skiptoken exit");
 	}

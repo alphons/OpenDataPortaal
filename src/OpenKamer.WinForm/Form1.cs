@@ -19,35 +19,32 @@ public partial class Form1 : Form
 	public Form1()
 	{
 		InitializeComponent();
-
-		//this.Text += $" (MongoDB.MvcCore.BsonJsonSerializer: {typeof(BsonJsonSerializer).Assembly.GetName().Version})";
 	}
 
 	private void OnLog(object? sender, EventArgs e)
 	{
-		Log(sender + Environment.NewLine);
-	}
-
-	private void Log(string line)
-	{
 		this.textBox1.Invoke((MethodInvoker)delegate
 		{
-			this.textBox1.AppendText(line);
+			this.textBox1.AppendText(sender + Environment.NewLine);
 		});
 	}
 
 	private void Form1_Load(object sender, EventArgs e)
 	{
-		var lastXml = Directory.GetFileSystemEntries(this.txtDbFileSystem.Text, "*.xml")
-			.OrderByDescending(x => x)
-			.ToList()
-			.FirstOrDefault();
+		try
+		{
+			var lastXml = Directory
+				.GetFileSystemEntries(this.txtFilesDirectory.Text, "*.xml")
+				.Select(x => long.Parse(Path.GetFileNameWithoutExtension(x)))
+				.OrderByDescending(x => x)
+				.FirstOrDefault();
 
-		if (lastXml == null)
-			return;
-
-		var last = long.Parse(Path.GetFileNameWithoutExtension(lastXml));
-		this.txtSkipToken.Text = last.ToString();
+			this.txtToken.Text = lastXml.ToString();
+		}
+		catch
+		{
+			this.txtToken.Text = "ERROR";
+		}
 	}
 
 	private void ButtonStop_Click(object sender, EventArgs e)
@@ -61,6 +58,8 @@ public partial class Form1 : Form
 
 	async private void Button1_Click(object sender, EventArgs e)
 	{
+		this.textBox1.Clear();
+
 		this.cancelSource = new();
 
 		this.groupBox1.Enabled = false;
@@ -71,12 +70,13 @@ public partial class Form1 : Form
 
 		this.progressBar1.Value = 0;
 
-		// txtSkipToken whitespace tot start from 0
-		this.feedController1 = new FeedController(this.txtDbFileSystem.Text, this.txtSkipToken.Text);
+		// txtToken whitespace tot start from 0
+		this.feedController1 = new FeedController(this.txtFilesDirectory.Text, this.txtToken.Text);
 
 		this.feedController1.OnLog += OnLog;
 
 		this.sw = Stopwatch.StartNew();
+
 		this.timer2.Start();
 
 		try
@@ -90,20 +90,18 @@ public partial class Form1 : Form
 
 		this.timer2.Stop();
 
-		this.txtSkipToken.Text = this.feedController1.SkipToken;
+		this.txtToken.Text = this.feedController1.Token;
 
 		this.ButtonStop.Enabled = false;
 
 		this.groupBox1.Enabled = true;
-
-		this.labelStatus.Text = "...";
 
 		this.progressBar1.Value = 0;
 	}
 
 	async private void Button2_Click(object sender, EventArgs e)
 	{
-		this.labelStatus.Text = "...";
+		this.textBox1.Clear();
 
 		this.progressBar1.Value = 0;
 
@@ -114,10 +112,16 @@ public partial class Form1 : Form
 		this.ButtonStop.Enabled = true;
 
 		this.sw = Stopwatch.StartNew();
+
 		this.timer1.Start();
 
-		// txtSkipToken whitespace tot start from beginning
-		this.entityController1 = new EntityController(this.txtMongoConnectionString.Text, this.txtDbName.Text, this.txtDbFileSystem.Text, this.txtSkipToken.Text);
+		// txtToken whitespace tot start from beginning
+		this.entityController1 = new EntityController(
+			this.txtMongoConnectionString.Text, 
+			this.txtDbName.Text, 
+			this.txtFilesDirectory.Text, 
+			this.txtToken.Text);
+
 		this.entityController1.OnLog += OnLog;
 
 		try
@@ -128,10 +132,9 @@ public partial class Form1 : Form
 		{
 
 		}
-
-		this.txtSkipToken.Text = this.entityController1.SkipToken;
-
 		this.timer1.Stop();
+
+		this.txtToken.Text = this.entityController1.Token;
 
 		this.ButtonStop.Enabled = false;
 
@@ -147,18 +150,25 @@ public partial class Form1 : Form
 		if (this.sw == null || this.entityController1 == null)
 			return;
 
-		this.lblCount.Text = this.entityController1.EntityCount.ToString();
+		this.lblIndex.Text = this.entityController1.FilesIndex.ToString();
+
 		this.lblErrors.Text = this.entityController1.Error.ToString();
 
-		this.progressBar1.Value = Math.Min(100, (this.entityController1.FileCount / 200));
-
-		this.labelStatus.Text = $"Files: {this.entityController1.FileCount}";
+		this.progressBar1.Value = Math.Min(100, 100 * this.entityController1.FilesIndex / this.entityController1.FilesTotal);
 
 		var speed = (1000 * this.entityController1.EntityCount) / this.sw.ElapsedMilliseconds;
 
 		this.lblSpeed.Text = $"{speed} e/sec";
 
-		this.txtSkipToken.Text = this.entityController1.SkipToken;
+		var secondstogo = (this.entityController1.FilesTotal - this.entityController1.FilesIndex) * sw.ElapsedMilliseconds / (1 + this.entityController1.FilesIndex) / 1000;
+
+		var takes = new DateTimeOffset().AddSeconds(secondstogo);
+
+		this.lblDuration.Text = $"{takes.Hour:00}:{takes.Minute:00}:{takes.Second:00}";
+
+		this.lblStatus.Text = $"{this.entityController1.EntityCount}";
+
+		this.txtToken.Text = this.entityController1.Token;
 	}
 
 	private void FeedController_Tick(object sender, EventArgs e)
@@ -166,17 +176,23 @@ public partial class Form1 : Form
 		if (this.sw == null || this.feedController1 == null)
 			return;
 
-		this.lblCount.Text = this.feedController1.FileCount.ToString();
+		this.lblIndex.Text = this.feedController1.FilesIndex.ToString();
 
-		this.progressBar1.Value = Math.Min(100, (this.feedController1.FileCount / 200) );
+		this.progressBar1.Value = Math.Min(100, 100 * this.feedController1.FilesIndex / this.feedController1.FilesTotal);
 
-		var speed = (1000 * this.feedController1.FileCount) / this.sw.ElapsedMilliseconds;
+		var speed = (1000 * this.feedController1.FilesIndex) / this.sw.ElapsedMilliseconds;
 
-		this.lblSpeed.Text = $"{speed} e/sec";
+		this.lblSpeed.Text = $"{speed} f/sec";
 
-		this.txtSkipToken.Text = this.feedController1.SkipToken;
+		var secondstogo = (this.feedController1.FilesTotal - this.feedController1.FilesIndex) * sw.ElapsedMilliseconds / (1 + this.feedController1.FilesIndex) / 1000;
 
-		this.labelStatus.Text = this.feedController1.Status;
+		var takes = new DateTimeOffset().AddSeconds(secondstogo);
+
+		this.lblDuration.Text = $"{takes.Hour:00}:{takes.Minute:00}:{takes.Second:00}";
+
+		this.lblStatus.Text = this.feedController1.Status;
+
+		this.txtToken.Text = this.feedController1.Token;
 	}
 
 }
