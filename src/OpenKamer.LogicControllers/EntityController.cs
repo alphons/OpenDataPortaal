@@ -80,7 +80,7 @@ public class EntityController
 
 		do
 		{
-			var FileName = FilesDirectory + @"\" + Token + ".xml";
+			var FileName = FilesDirectory + @"\" + this.Token + ".xml";
 
 			using StreamReader reader = new(FileName);
 
@@ -92,28 +92,42 @@ public class EntityController
 				return;
 			}
 
-			var resumeNode = feed.Links.FirstOrDefault(x => x.Rel == "resume");
-			if (resumeNode != null)
+			var nodeSelf = feed.Links.FirstOrDefault(x => x.Rel == "self");
+
+			if (nodeSelf == null || nodeSelf.Href == null)
+			{
+				Log("Self error, exit");
+				return;
+			}
+
+			if (this.Token != "0" && !nodeSelf.Href.EndsWith(this.Token))
+			{
+				Log("Incomplete, exit");
+				return;
+			}
+
+			var nodeResume = feed.Links.FirstOrDefault(x => x.Rel == "resume");
+			if (nodeResume != null)
 			{
 				Log("Resume (not complete) exit");
 				return;
 			}
 
-			var nextNode = feed.Links.FirstOrDefault(x => x.Rel == "next");
-			if (nextNode == null || nextNode.Href == null)
+			var nodeNext = feed.Links.FirstOrDefault(x => x.Rel == "next");
+			if (nodeNext == null || nodeNext.Href == null)
 			{
 				Log("Normal exit");
 				return;
 			}
 
-			var intI = nextNode.Href.IndexOf("skiptoken=");
+			var intI = nodeNext.Href.IndexOf("skiptoken=");
 			if (intI < 0)
 			{
 				Log("Abnormal skiptoken exit");
 				return;
 			}
 			if (intI > 0)
-				Token = nextNode.Href[(intI + 10)..];
+				Token = nodeNext.Href[(intI + 10)..];
 
 			await ProcessEntitiesAsync(feed, cancellationToken);
 

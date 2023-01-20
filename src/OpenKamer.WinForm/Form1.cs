@@ -169,7 +169,8 @@ public partial class Form1 : Form
 		this.lblSpeed.Text = $"{speed} e/sec";
 
 		var secondstogo = (this.entityController1.FilesTotal - this.entityController1.FilesIndex) * sw.ElapsedMilliseconds / (1 + this.entityController1.FilesIndex) / 1000;
-
+		if (secondstogo < 0)
+			secondstogo = 0;
 		var takes = new DateTimeOffset().AddSeconds(secondstogo);
 
 		this.lblDuration.Text = $"{takes.Hour:00}:{takes.Minute:00}:{takes.Second:00}";
