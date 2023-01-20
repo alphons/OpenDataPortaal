@@ -1,5 +1,5 @@
 //
-// (c) 2022, Alphons van der Heijden
+// (c) 2022,2023 Alphons van der Heijden
 //
 // https://opendata.tweedekamer.nl/documentatie/
 //

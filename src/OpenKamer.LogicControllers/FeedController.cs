@@ -1,5 +1,5 @@
 ﻿//
-// (c) 2022, Alphons van der Heijden
+// (c) 2022,2023 Alphons van der Heijden
 //
 // https://opendata.tweedekamer.nl/documentatie/
 // https://opendata.tweedekamer.nl/documentatie/syncfeed-api
@@ -88,29 +88,55 @@ public class FeedController
 				Status = "saved";
 			}
 
-			using var textReader = File.OpenText(FileName);
+			var textReader = File.OpenText(FileName);
 
 			xDoc = await XDocument.LoadAsync(textReader, LoadOptions.None, cancellationToken);
 
+			textReader.Dispose();
+
 			var links = xDoc.Descendants(ns + "link");
 
-			var resumeNode = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "resume");
+			var nodeSelf = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "self");
 
-			if(resumeNode != null)
+			var urlSelf = nodeSelf?.Attribute("href")?.Value;
+
+			var nodeResume = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "resume");
+
+			var nodeNext = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "next");
+
+			urlFeed = nodeNext?.Attribute("href")?.Value;
+
+			if(urlSelf == null)
 			{
-				Log("Resume exit");
+				Log("Self error, exit");
 				return;
 			}
 
-			var nextNode = links.FirstOrDefault(x => x.Attribute("rel")?.Value == "next");
+			if(this.Token!= "0" && !urlSelf.EndsWith(this.Token))
+			{
+				Log("Incomplete, exit");
+				return;
+			}
 
-			if (nextNode == null)
+			if (nodeResume != null)
+			{
+				if (Status == "cached")
+				{
+					File.Delete(FileName);
+					continue;
+				}
+				if (Status == "saved")
+				{
+					Log("Resume exit");
+					return;
+				}
+			}
+
+			if (nodeNext == null)
 			{
 				Log("Normal exit");
 				return;
 			}
-
-			urlFeed = nextNode.Attribute("href")?.Value;
 
 			if (urlFeed == null)
 			{

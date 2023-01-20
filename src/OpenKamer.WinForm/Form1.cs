@@ -1,5 +1,5 @@
 //
-// (c) 2022, Alphons van der Heijden
+// (c) 2022,2023 Alphons van der Heijden
 //
 using System.Diagnostics;
 
@@ -193,6 +193,9 @@ public partial class Form1 : Form
 		this.lblSpeed.Text = $"{speed} f/sec";
 
 		var secondstogo = (this.feedController1.FilesTotal - this.feedController1.FilesIndex) * sw.ElapsedMilliseconds / (1 + this.feedController1.FilesIndex) / 1000;
+
+		if (secondstogo < 0)
+			secondstogo = 0;
 
 		var takes = new DateTimeOffset().AddSeconds(secondstogo);
 
